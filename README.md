@@ -17,8 +17,8 @@ npm run dev
 Create a `.env` file for the optional services:
 
 ```text
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-public-key
 GEMINI_API_KEY=your-server-side-key
 ```
 
@@ -41,8 +41,8 @@ Create a `presence` table with `id` and `last_seen` columns, enable row-level se
 
 Connect the repository to Netlify and set these environment variables in the site settings:
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 - `GEMINI_API_KEY`
 
 Netlify automatically detects the Vite build. The Gemini endpoint is available at `/api/ask-buddy` through `netlify/functions/ask-buddy.mjs`.
