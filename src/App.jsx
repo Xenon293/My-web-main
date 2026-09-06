@@ -4,6 +4,7 @@ import { Reveal } from './components/Reveal';
 import { TypingTest } from './components/TypingTest';
 import { Contact } from './components/Contact';
 import { PixelBuddy } from './components/PixelBuddy';
+import { Presence } from './components/Presence';
 import { projects } from './data/projects';
 import './styles.css';
 
@@ -59,6 +60,7 @@ function App() {
     return (
         <>
             <Nav />
+            <div className="presence-wrap"><Presence /></div>
 
             <main id="top">
                 {/* Hero Section */}

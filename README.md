@@ -1,17 +1,60 @@
-# Haniel Molejon — portfolio
+# Haniel Molejon — Portfolio
 
-Static React + Vite portfolio using plain CSS.
+A personal portfolio built with React, Vite, and plain CSS. The site presents Haniel's projects, learning focus, resources, typing test, Pixel Buddy assistant, and contact flow.
 
-## Setup
+## Requirements
 
-Requires Node.js 18 or newer. Run `npm install`, then `npm run dev`.
+- Node.js 18 or newer
+- npm
 
-Use `npm run build` for the production build and `npm run preview` to preview it locally.
+## Local development
 
-## Deployment
+```bash
+npm install
+npm run dev
+```
 
-Deploy the generated `dist` directory to any static host such as GitHub Pages, Netlify, or Vercel. The site has no backend or database.
+Create a `.env` file for the optional services:
+
+```text
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key
+GEMINI_API_KEY=your-server-side-key
+```
+
+The Supabase variables power the anonymous live-presence indicator. The Gemini key is used only by the Netlify Function and must never be prefixed with `VITE_` or exposed in client code.
+
+## Production build
+
+```bash
+npm run build
+npm run preview
+```
+
+The production files are generated in `dist/`.
+
+## Supabase presence setup
+
+Create a `presence` table with `id` and `last_seen` columns, enable row-level security, and add policies that allow anonymous clients to update a session row and read the active count. The client uses temporary anonymous IDs and stores no personal information.
+
+## Netlify deployment
+
+Connect the repository to Netlify and set these environment variables in the site settings:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `GEMINI_API_KEY`
+
+Netlify automatically detects the Vite build. The Gemini endpoint is available at `/api/ask-buddy` through `netlify/functions/ask-buddy.mjs`.
+
+## Project structure
+
+- `src/components/` — reusable page and interaction components
+- `src/data/` — portfolio content
+- `src/lib/` — external service clients
+- `netlify/functions/` — server-side functions
+- `public/` — static assets
 
 ## Adding a project
 
-Add an object to `src/data/projects.js` with `number`, `title`, `description`, `technologies`, `features`, and a real `github` URL. `ProjectCard` renders the shared structure automatically. Add `liveDemo` or `image` to the data and component when a real asset becomes available.
+Add a project object to `src/data/projects.js` with its title, description, technologies, features, and repository URL. The shared `ProjectCard` component renders the project layout.
