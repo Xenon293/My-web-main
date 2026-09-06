@@ -510,7 +510,7 @@ h2 {
 .buddy-body { left: 11px; top: 49px; width: 28px; height: 20px; border: 4px solid var(--ink); background: var(--accent); }.buddy-body b { position: absolute; top: 5px; width: 5px; height: 5px; background: var(--paper); }.buddy-body b:first-child { left: 5px; }.buddy-body b:last-child { right: 5px; }
 .buddy-foot { bottom: 0; width: 8px; height: 8px; background: var(--ink); }.buddy-foot.left { left: 12px; }.buddy-foot.right { right: 12px; }
 .pixel-caption { position: absolute; inset: 16px 20px auto; display: flex; justify-content: space-between; color: var(--muted); font: 500 .68rem var(--mono); text-transform: uppercase; letter-spacing: .08em; }
-.buddy-chat { position: absolute; z-index: 5; left: 50%; bottom: 118px; width: min(360px, calc(100% - 32px)); padding: 18px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); box-shadow: 5px 5px 0 var(--ink); font-size: .9rem; transform: translateX(-50%); }
+.buddy-chat { position: absolute; z-index: 5; left: 50%; bottom: 118px; width: min(360px, calc(100% - 32px)); padding: 18px; border: 2px solid color-mix(in srgb, var(--paper) 72%, transparent); background: color-mix(in srgb, var(--paper) 76%, transparent); color: var(--ink); box-shadow: 5px 5px 0 var(--ink), inset 0 1px 0 color-mix(in srgb, white 55%, transparent); backdrop-filter: blur(18px) saturate(135%); -webkit-backdrop-filter: blur(18px) saturate(135%); font-size: .9rem; transform: translateX(-50%); }
 .buddy-chat p { margin: 6px 0 14px; color: var(--muted); font-size: .85rem; }
 .buddy-chat-top { display: flex; align-items: center; justify-content: space-between; }
 .buddy-close { border: 0; background: transparent; color: var(--muted); font: 1.2rem var(--mono); cursor: pointer; }
@@ -521,7 +521,7 @@ h2 {
 .buddy-privacy { display: block; margin-top: 12px; color: var(--muted); font: .62rem var(--mono); }
 .buddy-chat-top { margin-bottom: 2px; }
 .buddy-questions { margin-top: 12px; }
-.buddy-questions button { flex: 1 1 auto; text-align: left; }
+.buddy-questions button { flex: 1 1 auto; text-align: left; border-width: 2px; background: color-mix(in srgb, var(--surface) 72%, transparent); }
 .buddy-questions { display: flex; gap: 6px; flex-wrap: wrap; }
 .buddy-questions button { border: 1px solid var(--line); padding: 7px 9px; background: var(--surface); color: var(--ink); font: 500 .68rem var(--mono); cursor: pointer; }
 .buddy-questions button:hover { border-color: var(--accent); color: var(--accent); }
