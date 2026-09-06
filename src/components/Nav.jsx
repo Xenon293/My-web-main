@@ -1,8 +1,200 @@
-import { useState } from 'react';
-export function Nav(){const[open,setOpen]=useState(false);const[dark,setDark]=useState(()=>localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme: dark)').matches));const links=[['About','#about'],['Work','#work'],['Focus','#focus'],['Resources','#resources'],['Contact','#contact']];const playTone=()=>{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(620,c.currentTime);o.frequency.exponentialRampToValueAtTime(980,c.currentTime+.12);g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.035,c.currentTime+.008);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.16);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.17)};const toggle=e=>{playTone();const next=!dark;const r=e.currentTarget.getBoundingClientRect();const x=r.left+r.width/2,y=r.top+r.height/2;const change=()=>{setDark(next);document.documentElement.dataset.theme=next?'dark':'light';localStorage.setItem('theme',next?'dark':'light')};if(document.startViewTransition){const vt=document.startViewTransition(change);vt.ready.then(()=>{const radius=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));document.documentElement.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+radius+'px at '+x+'px '+y+'px)']},{duration:540,easing:'cubic-bezier(.32,.08,.24,1)',pseudoElement:'::view-transition-new(root)'})}).catch(()=>{})}else{document.documentElement.classList.add('theme-swoosh',next?'to-dark':'to-light');setTimeout(change,80);setTimeout(()=>document.documentElement.classList.remove('theme-swoosh','to-dark','to-light'),620)}};return <header className="site-header"><a className="wordmark" href="#top">HM<span>.</span></a><div className="nav-actions"><button className="menu-button" aria-expanded={open} aria-controls="site-nav" onClick={()=>setOpen(!open)}>{open?'Close':'Menu'}</button></div><nav id="site-nav" className={open?'site-nav is-open':'site-nav'} aria-label="Primary navigation"><div className="nav-group"><span className="nav-group-label">Explore</span>{links.map(([label,href],i)=><a key={href} href={href} onClick={()=>setOpen(false)}><span className="nav-icon" aria-hidden="true">{['→','▣','⌁','✉'][i]}</span>{label}</a>)}</div><div className="nav-group nav-secondary"><span className="nav-group-label">Elsewhere</span><a href="https://github.com/Xenon293" target="_blank" rel="noreferrer"><span className="nav-icon">↗</span>GitHub</a><a href="mailto:hanielvantecil@gmail.com"><span className="nav-icon">@</span>Email</a></div><div className="nav-notes"><span>Student portfolio</span><span>Learning in public</span></div><button className="theme-toggle" onClick={toggle} aria-label={`Switch to ${dark?'light':'dark'} theme`}>{dark?'☼  Light theme':'☾  Dark theme'}</button></nav></header>}
+import { useState, useEffect } from 'react';
 
+const links = [
+  { label: 'About', href: '#about', icon: '↳' },
+  { label: 'Work', href: '#work', icon: '▣' },
+  { label: 'Focus', href: '#focus', icon: '⌁' },
+  { label: 'Resources', href: '#resources', icon: '✦' },
+  { label: 'Contact', href: '#contact', icon: '✉' },
+];
 
+export function Nav() {
+  const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  });
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+    return () => document.body.classList.remove('menu-open');
+  }, [open]);
 
+  // Close menu on Escape key
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape' && open) setOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open]);
 
+  const playTone = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(620, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(980, ctx.currentTime + 0.12);
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.035, ctx.currentTime + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.17);
+    } catch {
+      // Audio context might be restricted in some environments
+    }
+  };
+
+  const toggle = (e) => {
+    playTone();
+    const next = !dark;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    const applyTheme = () => {
+      setDark(next);
+      document.documentElement.dataset.theme = next ? 'dark' : 'light';
+      localStorage.setItem('theme', next ? 'dark' : 'light');
+    };
+
+    if (document.startViewTransition) {
+      const transition = document.startViewTransition(applyTheme);
+      transition.ready
+        .then(() => {
+          const radius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+          );
+          document.documentElement.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${radius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 540,
+              easing: 'cubic-bezier(.32,.08,.24,1)',
+              pseudoElement: '::view-transition-new(root)',
+            }
+          );
+        })
+        .catch(() => {});
+    } else {
+      document.documentElement.classList.add(
+        'theme-swoosh',
+        next ? 'to-dark' : 'to-light'
+      );
+      setTimeout(applyTheme, 80);
+      setTimeout(
+        () =>
+          document.documentElement.classList.remove(
+            'theme-swoosh',
+            'to-dark',
+            'to-light'
+          ),
+        620
+      );
+    }
+  };
+
+  return (
+    <>
+      <header className="site-header">
+        <a className="wordmark" href="#top" aria-label="Haniel Molejon - Back to top">
+          HM<span>.</span>
+        </a>
+
+        <div className="nav-actions">
+          <button
+            className="menu-button"
+            aria-expanded={open}
+            aria-controls="site-nav"
+            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? 'Close' : 'Menu'}
+          </button>
+        </div>
+
+        <nav
+          id="site-nav"
+          className={`site-nav ${open ? 'is-open' : ''}`}
+          aria-label="Primary navigation"
+        >
+          <div className="nav-group">
+            <span className="nav-group-label">Explore</span>
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+              >
+                <span className="nav-icon" aria-hidden="true">
+                  {link.icon}
+                </span>
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          <div className="nav-group nav-secondary">
+            <span className="nav-group-label">Elsewhere</span>
+            <a
+              href="https://github.com/Xenon293"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+            >
+              <span className="nav-icon">↗</span>
+              GitHub
+            </a>
+            <a
+              href="mailto:hanielvantecil@gmail.com"
+              onClick={() => setOpen(false)}
+            >
+              <span className="nav-icon">@</span>
+              Email
+            </a>
+          </div>
+
+          <div className="nav-notes">
+            <span>Student portfolio</span>
+            <span>Learning in public</span>
+          </div>
+
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={`Switch to ${dark ? 'light' : 'dark'} theme`}
+          >
+            {dark ? '☼  Light theme' : '☾  Dark theme'}
+          </button>
+        </nav>
+      </header>
+
+      {/* Backdrop for closing mobile navigation drawer */}
+      <div
+        className={`nav-backdrop ${open ? 'is-open' : ''}`}
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
+    </>
+  );
+}
