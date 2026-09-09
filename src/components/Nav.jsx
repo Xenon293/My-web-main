@@ -1,38 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 const links = [
-  { label: 'About', href: '#about', icon: '↳' },
-  { label: 'Work', href: '#work', icon: '▣' },
-  { label: 'Focus', href: '#focus', icon: '⌁' },
-  { label: 'Resources', href: '#resources', icon: '✦' },
-  { label: 'Contact', href: '#contact', icon: '✉' },
+  { label: "About", href: "#about", icon: "↳" },
+  { label: "Work", href: "#work", icon: "▣" },
+  { label: "Focus", href: "#focus", icon: "⌁" },
+  { label: "Resources", href: "#resources", icon: "✦" },
+  { label: "Contact", href: "#contact", icon: "✉" },
 ];
 
 export function Nav() {
+  const isPrivacyPage = window.location.pathname === "/privacy";
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   });
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (open) {
-      document.body.classList.add('menu-open');
+      document.body.classList.add("menu-open");
     } else {
-      document.body.classList.remove('menu-open');
+      document.body.classList.remove("menu-open");
     }
-    return () => document.body.classList.remove('menu-open');
+    return () => document.body.classList.remove("menu-open");
   }, [open]);
 
   // Close menu on Escape key
   useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key === 'Escape' && open) setOpen(false);
+      if (e.key === "Escape" && open) setOpen(false);
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   const playTone = () => {
@@ -43,7 +44,7 @@ export function Nav() {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(620, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(980, ctx.currentTime + 0.12);
 
@@ -68,8 +69,8 @@ export function Nav() {
 
     const applyTheme = () => {
       setDark(next);
-      document.documentElement.dataset.theme = next ? 'dark' : 'light';
-      localStorage.setItem('theme', next ? 'dark' : 'light');
+      document.documentElement.dataset.theme = next ? "dark" : "light";
+      localStorage.setItem("theme", next ? "dark" : "light");
     };
 
     if (document.startViewTransition) {
@@ -78,7 +79,7 @@ export function Nav() {
         .then(() => {
           const radius = Math.hypot(
             Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y)
+            Math.max(y, window.innerHeight - y),
           );
           document.documentElement.animate(
             {
@@ -89,26 +90,26 @@ export function Nav() {
             },
             {
               duration: 540,
-              easing: 'cubic-bezier(.32,.08,.24,1)',
-              pseudoElement: '::view-transition-new(root)',
-            }
+              easing: "cubic-bezier(.32,.08,.24,1)",
+              pseudoElement: "::view-transition-new(root)",
+            },
           );
         })
         .catch(() => {});
     } else {
       document.documentElement.classList.add(
-        'theme-swoosh',
-        next ? 'to-dark' : 'to-light'
+        "theme-swoosh",
+        next ? "to-dark" : "to-light",
       );
       setTimeout(applyTheme, 80);
       setTimeout(
         () =>
           document.documentElement.classList.remove(
-            'theme-swoosh',
-            'to-dark',
-            'to-light'
+            "theme-swoosh",
+            "to-dark",
+            "to-light",
           ),
-        620
+        620,
       );
     }
   };
@@ -116,7 +117,11 @@ export function Nav() {
   return (
     <>
       <header className="site-header">
-        <a className="wordmark" href="#top" aria-label="Haniel Molejon - Back to top">
+        <a
+          className="wordmark"
+          href={isPrivacyPage ? "/privacy" : "#top"}
+          aria-label="Haniel Molejon - Back to top"
+        >
           HM<span>.</span>
         </a>
 
@@ -125,16 +130,16 @@ export function Nav() {
             className="menu-button"
             aria-expanded={open}
             aria-controls="site-nav"
-            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
             onClick={() => setOpen(!open)}
           >
-            {open ? 'Close' : 'Menu'}
+            {open ? "Close" : "Menu"}
           </button>
         </div>
 
         <nav
           id="site-nav"
-          className={`site-nav ${open ? 'is-open' : ''}`}
+          className={`site-nav ${open ? "is-open" : ""}`}
           aria-label="Primary navigation"
         >
           <div className="nav-group">
@@ -142,7 +147,7 @@ export function Nav() {
             {links.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={isPrivacyPage ? `/${link.href}` : link.href}
                 onClick={() => setOpen(false)}
               >
                 <span className="nav-icon" aria-hidden="true">
@@ -182,16 +187,16 @@ export function Nav() {
             type="button"
             className="theme-toggle"
             onClick={toggle}
-            aria-label={`Switch to ${dark ? 'light' : 'dark'} theme`}
+            aria-label={`Switch to ${dark ? "light" : "dark"} theme`}
           >
-            {dark ? '☼  Light theme' : '☾  Dark theme'}
+            {dark ? "☼  Light theme" : "☾  Dark theme"}
           </button>
         </nav>
       </header>
 
       {/* Backdrop for closing mobile navigation drawer */}
       <div
-        className={`nav-backdrop ${open ? 'is-open' : ''}`}
+        className={`nav-backdrop ${open ? "is-open" : ""}`}
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />

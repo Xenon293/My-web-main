@@ -1,21 +1,38 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-const sessionKey = 'haniel-presence-id';
-const getSessionId = () => { let id = localStorage.getItem(sessionKey); if (!id) { id = crypto.randomUUID(); localStorage.setItem(sessionKey, id); } return id; };
+import { useEffect, useState } from "react";
+import { useCookieConsent } from "../hooks/useCookieConsent";
+import { presence } from "../services/presence";
+import { siteConfig } from "../config/site";
 
 export function Presence() {
   const [count, setCount] = useState(null);
-  const [status, setStatus] = useState('loading');
+  const [status, setStatus] = useState("loading");
+  const { consent } = useCookieConsent();
 
   useEffect(() => {
-    if (!supabase) { setStatus('offline'); return undefined; }
-    const id = getSessionId();
-    const updatePresence = async () => { const { error: heartbeatError } = await supabase.from('presence').upsert({ id, last_seen: new Date().toISOString() }); if (heartbeatError) { setStatus('offline'); return; } const cutoff = new Date(Date.now() - 90_000).toISOString(); const { count: active, error: countError } = await supabase.from('presence').select('*', { count: 'exact', head: true }).gte('last_seen', cutoff); if (countError) { setStatus('offline'); return; } if (typeof active === 'number') { setCount(active); setStatus('ready'); } };
-    updatePresence(); const timer = window.setInterval(updatePresence, 30_000);
+    if (consent !== "accepted") {
+      setStatus("offline");
+      return undefined;
+    }
+    const refresh = async () => {
+      const result = presence ? await presence.observe() : { status: "offline" };
+      setStatus(result.status);
+      if (result.status === "ready") setCount(result.count);
+    };
+    refresh();
+    const timer = window.setInterval(refresh, siteConfig.presenceIntervalMs);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [consent]);
 
-  const label = status === 'offline' ? 'presence unavailable' : status === 'loading' ? 'checking presence' : `${count} ${count === 1 ? 'person' : 'people'} viewing now`;
-  return <span className={`presence-indicator is-${status}`} aria-label={label}><span className="presence-eye" aria-hidden="true" />{label}</span>;
+  const label =
+    status === "offline"
+      ? "presence unavailable"
+      : status === "loading"
+        ? "checking presence"
+        : `${count} ${count === 1 ? "person" : "people"} viewing now`;
+  return (
+    <span className={`presence-indicator is-${status}`} aria-label={label}>
+      <span className="presence-eye" aria-hidden="true" />
+      {label}
+    </span>
+  );
 }

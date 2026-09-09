@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-export function Reveal({ children, className = '', delay = 0, as: Tag = 'div' }) {
+export function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  as: Tag = "div",
+}) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -17,8 +22,8 @@ export function Reveal({ children, className = '', delay = 0, as: Tag = 'div' })
       },
       {
         threshold: 0.05,
-        rootMargin: '0px 0px -40px 0px',
-      }
+        rootMargin: "0px 0px -40px 0px",
+      },
     );
 
     observer.observe(element);
@@ -28,11 +33,10 @@ export function Reveal({ children, className = '', delay = 0, as: Tag = 'div' })
   return (
     <Tag
       ref={ref}
-      className={`reveal ${visible ? 'is-visible' : ''} ${className}`}
-      style={{ '--reveal-delay': `${delay}ms` }}
+      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
+      style={{ "--reveal-delay": `${delay}ms` }}
     >
       {children}
     </Tag>
   );
 }
-
