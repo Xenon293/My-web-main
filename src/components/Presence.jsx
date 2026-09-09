@@ -14,9 +14,13 @@ export function Presence() {
       return undefined;
     }
     const refresh = async () => {
-      const result = presence ? await presence.observe() : { status: "offline" };
-      setStatus(result.status);
-      if (result.status === "ready") setCount(result.count);
+      try {
+        const result = presence ? await presence.observe() : { status: "offline" };
+        setStatus(result.status);
+        if (result.status === "ready") setCount(result.count);
+      } catch {
+        setStatus("offline");
+      }
     };
     refresh();
     const timer = window.setInterval(refresh, siteConfig.presenceIntervalMs);

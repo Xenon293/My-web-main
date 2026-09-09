@@ -2,7 +2,16 @@ import { supabase } from "../lib/supabase";
 import { siteConfig } from "../config/site";
 
 function browserIdentity() {
-  return { getId() { let id = localStorage.getItem(siteConfig.presenceStorageKey); if (!id) { id = crypto.randomUUID(); localStorage.setItem(siteConfig.presenceStorageKey, id); } return id; } };
+  return {
+    getId() {
+      let id = localStorage.getItem(siteConfig.presenceStorageKey);
+      if (!id) {
+        id = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(siteConfig.presenceStorageKey, id);
+      }
+      return id;
+    },
+  };
 }
 
 function supabaseRepository(client) {

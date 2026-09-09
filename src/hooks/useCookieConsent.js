@@ -11,9 +11,13 @@ export function useCookieConsent() {
     setConsent(window.localStorage.getItem(siteConfig.consentStorageKey));
   }, []);
   const decide = (value) => {
-    window.localStorage.setItem(siteConfig.consentStorageKey, value);
+    if (value === null) {
+      window.localStorage.removeItem(siteConfig.consentStorageKey);
+    } else {
+      window.localStorage.setItem(siteConfig.consentStorageKey, value);
+    }
     setConsent(value);
     window.dispatchEvent(new CustomEvent("cookie-consent", { detail: value }));
   };
-  return { consent, decide, hasOptionalConsent: consent === "accepted" };
+  return { consent, decide, reset: () => decide(null), hasOptionalConsent: consent === "accepted" };
 }
