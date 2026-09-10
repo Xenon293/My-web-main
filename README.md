@@ -1,6 +1,6 @@
-# Haniel Molejon — Portfolio
+Portfolio
 
-A personal portfolio built with React, Vite, and plain CSS. The site presents Haniel's projects, learning focus, resources, typing test, Pixel Buddy assistant, and contact flow.
+A personal portfolio built with React, Vite, and plain CSS.
 
 ## Requirements
 
