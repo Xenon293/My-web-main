@@ -89,7 +89,9 @@ function App() {
             </h2>
           </Reveal>
           <Reveal className="about-copy">
-            <img src="/haniels%20img.jpg" alt="Haniel Molejon" />
+            <figure className="portrait-frame">
+              <img src="/haniels%20img.jpg" alt="Haniel Molejon" />
+            </figure>
             <div>
               <p>
                 I’m building my foundation one project at a time. I enjoy the
