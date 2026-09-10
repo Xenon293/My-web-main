@@ -1,4 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Source+Serif+4:ital,wght@0,400;0,500;1,400&display=swap");
+@layer theme, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-serif: var(--serif);
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+}
 
 /* ==========================================================================
    1. Design Tokens & Theme Variables
@@ -533,12 +548,66 @@ h2 {
    Hero Section
    -------------------------------------------------------------------------- */
 .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: calc(100svh - 64px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding-top: 32px;
   padding-bottom: 48px;
+}
+
+.hero > :not(.hero-background) {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-background {
+  z-index: -1;
+  overflow: hidden;
+  opacity: .72;
+}
+
+.hero-background canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hero-background-fallback {
+  position: absolute;
+  inset: 16% -18% -12% 36%;
+  opacity: .38;
+  background:
+    radial-gradient(circle at 68% 30%, rgb(255 255 255 / 24%) 0 1.2%, transparent 2.2%),
+    radial-gradient(circle at 68% 30%, color-mix(in srgb, var(--accent) 62%, transparent) 0 6%, color-mix(in srgb, var(--accent) 24%, transparent) 7.5%, transparent 12%),
+    repeating-linear-gradient(112deg, transparent 0 22px, color-mix(in srgb, var(--ink) 14%, transparent) 23px 24px),
+    repeating-linear-gradient(18deg, transparent 0 28px, color-mix(in srgb, var(--ink) 11%, transparent) 29px 30px);
+  mask-image: linear-gradient(to left, #000 58%, transparent 100%);
+  transform: perspective(520px) rotateX(58deg) rotateZ(-8deg);
+}
+
+@media (min-width: 768px) {
+  .hero-background:has(canvas) .hero-background-fallback {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-background {
+    opacity: .55;
+  }
+
+  .hero-background-fallback {
+    inset: 25% -42% 0 28%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-background-fallback {
+    transform: perspective(520px) rotateX(58deg) rotateZ(-8deg);
+  }
 }
 
 @media (min-width: 1024px) {
@@ -573,6 +642,31 @@ h2 {
   font-size: clamp(1rem, 2vw, 1.15rem);
   line-height: 1.6;
 }
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.hero-primary-action,
+.hero-secondary-action {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid var(--ink);
+  font: 500 .76rem var(--mono);
+  text-decoration: none;
+  transition: background-color var(--transition-hover), color var(--transition-hover), transform var(--transition-hover);
+}
+
+.hero-primary-action { background: var(--ink); color: var(--paper); }
+.hero-secondary-action { color: var(--ink); }
+.hero-primary-action:hover, .hero-secondary-action:hover { transform: translateY(-2px); }
+.hero-secondary-action:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
 
 /* Scroll-reactive pixel study buddy: one small signature detail, not a heavy scene. */
 .pixel-interlude {
@@ -1250,6 +1344,114 @@ html[data-theme="dark"] .project-card:hover {
   font: 400 1.15rem/1.5 var(--serif);
   color: var(--ink);
   margin-bottom: 32px;
+}
+
+.project-preview {
+  min-height: 180px;
+  margin-top: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, transparent 48%, color-mix(in srgb, var(--accent) 18%, transparent) 49% 51%, transparent 52%),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--ink) 5%, transparent) 0 1px, transparent 1px 24px),
+    var(--surface-raised);
+}
+
+.project-preview-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.project-preview span, .project-preview small { font: 500 .62rem var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.project-preview strong { margin: 6px 0; font: 400 1.45rem var(--serif); }
+
+.case-study-summary { margin: 0 0 26px; display: grid; gap: 16px; }
+.case-study-summary div { border-left: 2px solid var(--accent); padding-left: 12px; }
+.case-study-summary dt, .project-safety span { margin-bottom: 4px; font: 500 .62rem var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.case-study-summary dd { margin: 0; font-size: .88rem; line-height: 1.55; }
+.project-safety { margin: 22px 0 0 !important; padding: 14px; background: color-mix(in srgb, var(--accent) 8%, transparent); font: 400 .78rem/1.55 var(--sans) !important; }
+.project-safety span { display: block; }
+.project-links { display: flex; flex-wrap: wrap; gap: 18px; }
+
+.project-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.project-card-outcome {
+  margin: 22px 0 0 !important;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font: 400 .86rem/1.55 var(--sans) !important;
+}
+
+.project-card-outcome span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font: 500 .62rem var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.project-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(96px, 12vw, 160px) 20px 80px;
+}
+
+.project-case-study { max-width: 920px; margin: 0 auto; }
+.case-study-hero { max-width: 760px; }
+.case-study-hero h1 { margin: 18px 0; font: 400 clamp(3rem, 9vw, 6.8rem)/.94 var(--serif); letter-spacing: -.055em; }
+.case-study-hero > p { max-width: 60ch; font: 400 clamp(1.08rem, 2vw, 1.35rem)/1.55 var(--serif); }
+.case-study-hero .tag-list { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 24px; }
+
+.case-study-preview-placeholder,
+.case-study-preview-image {
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  margin: clamp(48px, 8vw, 88px) 0;
+  border: 1px solid var(--line);
+}
+
+.case-study-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(24px, 5vw, 52px);
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ink) 5%, transparent) 0 1px, transparent 1px 32px), var(--surface-raised);
+}
+
+.case-study-preview-placeholder span { color: var(--muted); font: 500 .68rem var(--mono); text-transform: uppercase; }
+.case-study-preview-placeholder strong { margin-top: 8px; font: 400 clamp(2rem, 5vw, 4rem) var(--serif); }
+.case-study-preview-image { object-fit: cover; }
+.case-study-body { display: grid; gap: 0; }
+.case-study-body section { display: grid; grid-template-columns: minmax(150px, .6fr) 1.4fr; gap: 18px 44px; padding: 40px 0; border-top: 1px solid var(--line); }
+.case-study-body section .detail-label { grid-row: 1 / span 2; }
+.case-study-body h2 { margin: 0; font: 400 clamp(1.5rem, 3vw, 2.2rem)/1.15 var(--serif); }
+.case-study-body p { margin: 0; line-height: 1.7; }
+.case-study-decisions { margin: 0; padding-left: 18px; }
+.case-study-decisions li { margin: 0 0 10px; line-height: 1.55; }
+.case-study-links, .case-study-navigation { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+.case-study-navigation { max-width: 920px; margin: 64px auto 0; padding-top: 32px; border-top: 1px solid var(--line); justify-content: space-between; }
+
+@media (min-width: 640px) { .project-page { padding-left: 32px; padding-right: 32px; } }
+@media (min-width: 1024px) { .project-page { padding-left: 48px; padding-right: 48px; } }
+@media (max-width: 600px) {
+  .case-study-body section { grid-template-columns: 1fr; gap: 10px; padding: 30px 0; }
+  .case-study-body section .detail-label { grid-row: auto; }
+  .case-study-preview-placeholder, .case-study-preview-image { aspect-ratio: 4 / 3; }
 }
 
 .project-details {
@@ -1983,11 +2185,12 @@ footer {
 }
 
 .config-btn {
+  min-height: 32px;
   padding: 5px 12px;
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.68);
   font: 500 0.72rem var(--mono);
   cursor: pointer;
   transition:
@@ -2291,7 +2494,7 @@ footer {
 .quick-restart-btn {
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.68);
   font: 500 0.72rem var(--mono);
   cursor: pointer;
   transition:
@@ -2307,7 +2510,7 @@ footer {
 
 .keyboard-tip {
   font: 400 0.68rem var(--mono);
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.58);
 }
 
 /* ==========================================================================
@@ -2587,6 +2790,27 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 .contact-submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.copy-email-button {
+  margin-top: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: 500 .7rem var(--mono);
+  cursor: pointer;
+}
+
+.form-status { min-height: 1.5em; margin: 0; color: var(--muted); font: 400 .72rem/1.5 var(--mono); }
+
+.portrait-frame picture { display: block; }
+
+@media (max-width: 430px) {
+  .hero-actions { width: 100%; }
+  .hero-primary-action, .hero-secondary-action { flex: 1 1 130px; }
+  .project-preview { min-height: 145px; }
 }
 
 /* ── Form Success State ── */

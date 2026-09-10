@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const links = [
   { label: "About", href: "#about", icon: "↳" },
@@ -9,8 +9,10 @@ const links = [
 ];
 
 export function Nav() {
-  const isPrivacyPage = window.location.pathname === "/privacy";
+  const isSubpage = window.location.pathname !== "/";
   const [open, setOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+  const navRef = useRef(null);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -21,16 +23,39 @@ export function Nav() {
   useEffect(() => {
     if (open) {
       document.body.classList.add("menu-open");
+      navRef.current?.querySelector("a, button")?.focus();
     } else {
       document.body.classList.remove("menu-open");
     }
     return () => document.body.classList.remove("menu-open");
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const trapFocus = (event) => {
+      if (event.key !== "Tab") return;
+      const controls = [...navRef.current.querySelectorAll('a[href], button:not([disabled])')];
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", trapFocus);
+    return () => window.removeEventListener("keydown", trapFocus);
+  }, [open]);
+
   // Close menu on Escape key
   useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key === "Escape" && open) setOpen(false);
+      if (e.key === "Escape" && open) {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -119,14 +144,15 @@ export function Nav() {
       <header className="site-header">
         <a
           className="wordmark"
-          href={isPrivacyPage ? "/privacy" : "#top"}
-          aria-label="Haniel Molejon - Back to top"
+          href={isSubpage ? "/" : "#top"}
+          aria-label={isSubpage ? "HM. — Haniel Molejon, portfolio home" : "HM. — Haniel Molejon, back to top"}
         >
           HM<span>.</span>
         </a>
 
         <div className="nav-actions">
           <button
+            ref={menuButtonRef}
             className="menu-button"
             aria-expanded={open}
             aria-controls="site-nav"
@@ -138,6 +164,7 @@ export function Nav() {
         </div>
 
         <nav
+          ref={navRef}
           id="site-nav"
           className={`site-nav ${open ? "is-open" : ""}`}
           aria-label="Primary navigation"
@@ -147,7 +174,7 @@ export function Nav() {
             {links.map((link) => (
               <a
                 key={link.href}
-                href={isPrivacyPage ? `/${link.href}` : link.href}
+                href={isSubpage ? `/${link.href}` : link.href}
                 onClick={() => setOpen(false)}
               >
                 <span className="nav-icon" aria-hidden="true">

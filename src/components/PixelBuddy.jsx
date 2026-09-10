@@ -11,6 +11,8 @@ const questions = {
 
 export function PixelBuddy() {
   const sectionRef = useRef(null);
+  const triggerRef = useRef(null);
+  const dialogRef = useRef(null);
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState(
@@ -136,11 +138,31 @@ export function PixelBuddy() {
         setOpen(true);
         setTimeout(() => document.querySelector(".buddy-search")?.focus(), 0);
       }
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape" && open) {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
     window.addEventListener("keydown", shortcut);
     return () => window.removeEventListener("keydown", shortcut);
-  }, []);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+    const controls = [...dialog.querySelectorAll('input, button:not([disabled]), a[href]')];
+    dialog.querySelector(".buddy-search")?.focus();
+    const trapFocus = (event) => {
+      if (event.key !== "Tab" || controls.length === 0) return;
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    dialog.addEventListener("keydown", trapFocus);
+    return () => dialog.removeEventListener("keydown", trapFocus);
+  }, [open]);
 
   const visibleQuestions = Object.keys(questions).filter((item) =>
     item.toLowerCase().includes(query.toLowerCase()),
@@ -156,8 +178,13 @@ export function PixelBuddy() {
     setAnswer("");
   };
   const copyEmail = async () => {
-    await navigator.clipboard?.writeText("hanielvantecil@gmail.com");
-    setCopied(true);
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText("hanielvantecil@gmail.com");
+      setCopied(true);
+    } catch {
+      setAnswer("Copying is unavailable. Email Haniel at hanielvantecil@gmail.com.");
+    }
     setTimeout(() => setCopied(false), 1400);
   };
   const dismissHint = () => {
@@ -214,6 +241,7 @@ export function PixelBuddy() {
         <div className="pixel-grid" aria-hidden="true" />
         <div className="pixel-shadow" aria-hidden="true" />
         <button
+          ref={triggerRef}
           className="pixel-buddy-button"
           type="button"
           onClick={() => setOpen(!open)}
@@ -243,12 +271,14 @@ export function PixelBuddy() {
         )}
         <div
           className="buddy-pixels"
+          role="img"
           aria-label={`${pixels} progress pixels collected`}
         >
           {"*".repeat(pixels)}
         </div>
         {open && (
           <div
+            ref={dialogRef}
             className="buddy-chat"
             role="dialog"
             aria-modal="true"
@@ -265,7 +295,7 @@ export function PixelBuddy() {
               <button
                 type="button"
                 className="buddy-close"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); triggerRef.current?.focus(); }}
                 aria-label="Close"
               >
                 x

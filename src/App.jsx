@@ -1,5 +1,6 @@
 import { Nav } from "./components/Nav";
 import { ProjectCard } from "./components/ProjectCard";
+import { ProjectDetail } from "./components/ProjectDetail";
 import { Reveal } from "./components/Reveal";
 import { TypingTest } from "./components/TypingTest";
 import { Contact } from "./components/Contact";
@@ -7,15 +8,24 @@ import { PixelBuddy } from "./components/PixelBuddy";
 import { Presence } from "./components/Presence";
 import { CookieConsent } from "./components/CookieConsent";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
+import { HeroBackground } from "./components/HeroBackground";
+import { Seo } from "./components/Seo";
+import { siteConfig } from "./config/site";
 import { focusAreas, resources } from "./data/siteContent";
 import { projects } from "./data/projects";
 import "./styles.css";
 
 function App() {
-  if (window.location.pathname === "/privacy") return <PrivacyPage />;
+  const pathname = window.location.pathname.replace(/\/$/, "") || "/";
+  if (pathname === "/privacy") return <PrivacyPage />;
+  if (pathname.startsWith("/work/")) {
+    const project = projects.find((item) => `/work/${item.slug}` === pathname);
+    if (project) return <ProjectPage project={project} pathname={pathname} />;
+  }
 
   return (
     <>
+      <Seo pathname="/" />
       <Nav />
       <div className="presence-wrap">
         <Presence />
@@ -24,7 +34,8 @@ function App() {
       <main id="top">
         {/* Hero Section */}
         <Reveal as="section" className="hero">
-          <div className="eyebrow">IT student · Cebu, Philippines</div>
+          <HeroBackground />
+          <div className="eyebrow">IT student · Cebu, Philippines · Open to internships</div>
           <h1 id="hero-title">
             Learning to make
             <br />
@@ -33,16 +44,14 @@ function App() {
           <div className="hero-bottom">
             <p>
               I’m Haniel Molejon, a first-year BS Information Technology student
-              at Cebu Technological University – Danao Campus. I’m exploring
-              software development through small, deliberate projects.
+              building practical Python and automation projects while looking
+              for an internship where I can learn, contribute, and grow.
             </p>
-            <a
-              className="circle-link"
-              href="#work"
-              aria-label="Jump to selected work"
-            >
-              ↓
-            </a>
+            <div className="hero-actions">
+              <a className="hero-primary-action" href="#work">View projects</a>
+              <a className="hero-secondary-action" href="#contact">Contact me</a>
+              {siteConfig.resumePath && <a className="hero-secondary-action" href={siteConfig.resumePath} target="_blank" rel="noreferrer">View resume</a>}
+            </div>
           </div>
         </Reveal>
 
@@ -90,7 +99,11 @@ function App() {
           </Reveal>
           <Reveal className="about-copy">
             <figure className="portrait-frame">
-              <img src="/haniels%20img.jpg" alt="Haniel Molejon" />
+              <picture>
+                <source type="image/avif" srcSet="/haniel-molejon-480.avif 480w, /haniel-molejon-960.avif 960w" sizes="(min-width: 768px) 240px, 100vw" />
+                <source type="image/webp" srcSet="/haniel-molejon-480.webp 480w, /haniel-molejon-960.webp 960w" sizes="(min-width: 768px) 240px, 100vw" />
+                <img src="/haniel-molejon.jpg" alt="Haniel Molejon" width="1254" height="1254" loading="lazy" decoding="async" />
+              </picture>
             </figure>
             <div>
               <p>
@@ -176,9 +189,31 @@ function App() {
   );
 }
 
+function ProjectPage({ project, pathname }) {
+  return (
+    <>
+      <Seo pathname={pathname} project={project} />
+      <Nav />
+      <main className="project-page" id="top">
+        <ProjectDetail project={project} />
+        <nav className="case-study-navigation" aria-label="Project navigation">
+          <a className="privacy-home-link" href="/#work">← Back to selected work</a>
+          <a className="privacy-home-link" href="/#contact">Contact me →</a>
+        </nav>
+      </main>
+      <footer>
+        <span>Haniel Molejon</span>
+        <span>© {new Date().getFullYear()} · <a href="/privacy">Privacy &amp; Cookies</a></span>
+      </footer>
+      <CookieConsent />
+    </>
+  );
+}
+
 function PrivacyPage() {
   return (
     <>
+      <Seo pathname="/privacy" />
       <Nav />
       <main className="privacy-page" id="top">
         <PrivacyPolicy />

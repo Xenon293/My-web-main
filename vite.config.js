@@ -1,14 +1,13 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+import tailwindcss from "@tailwindcss/vite";
+export default defineConfig(() => {
   return {
-    plugins: [react()],
-    define: {
-      "import.meta.env.SUPABASE_URL": JSON.stringify(env.SUPABASE_URL || ""),
-      "import.meta.env.SUPABASE_ANON_KEY": JSON.stringify(
-        env.SUPABASE_ANON_KEY || "",
-      ),
+    plugins: [react(), tailwindcss()],
+    test: {
+      environment: "jsdom",
+      globals: true,
+      setupFiles: "./src/test/setup.js",
     },
   };
 });

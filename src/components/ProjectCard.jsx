@@ -1,42 +1,21 @@
 export function ProjectCard({ project }) {
   return (
     <article className="project-card">
-      <div className="project-topline">
-        <span>{project.number}</span>
-        <span>Selected work</span>
-      </div>
-
+      <div className="project-topline"><span>{project.number}</span><span>Selected work</span></div>
+      {project.preview ? (
+        <img className="project-preview-image" src={project.preview} alt={`${project.title} project preview`} loading="lazy" decoding="async" />
+      ) : (
+        <div className="project-preview" aria-label={`${project.title} preview placeholder`}>
+          <span>Project preview</span><strong>{project.title}</strong><small>Original screenshot coming soon</small>
+        </div>
+      )}
       <h3>{project.title}</h3>
       <p>{project.description}</p>
-
-      <div className="project-details">
-        <div>
-          <span className="detail-label">Built with</span>
-          <ul className="tag-list">
-            {project.technologies.map((tech) => (
-              <li key={tech}>{tech}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <span className="detail-label">What it does</span>
-          <ul className="feature-list">
-            {project.features.map((feature) => (
-              <li key={feature}>{feature}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <a
-        className="text-link"
-        href={project.github}
-        target="_blank"
-        rel="noreferrer"
-      >
-        View on GitHub <span aria-hidden="true">↗</span>
-      </a>
+      <ul className="tag-list project-card-tags" aria-label="Technologies used">
+        {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
+      </ul>
+      <p className="project-card-outcome"><span>Outcome</span>{project.outcome}</p>
+      <a className="text-link" href={`/work/${project.slug}`}>View case study <span aria-hidden="true">→</span></a>
     </article>
   );
 }

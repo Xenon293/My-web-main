@@ -552,8 +552,8 @@ export function TypingTest() {
               onClick={() => setIsMuted(!isMuted)}
               aria-label={
                 isMuted
-                  ? "Unmute typing sound effects"
-                  : "Mute typing sound effects"
+                  ? "Muted — unmute typing sound effects"
+                  : "SFX On — mute typing sound effects"
               }
               title={isMuted ? "Unmute SFX" : "Mute SFX"}
             >

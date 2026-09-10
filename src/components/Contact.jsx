@@ -1,14 +1,27 @@
+import { useState } from "react";
 import { Reveal } from "./Reveal";
 
 const EMAIL = "hanielvantecil@gmail.com";
 
 export function Contact() {
+  const [status, setStatus] = useState("");
   const handleSubmit = (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const subject = `Portfolio message from ${form.get("name")}`;
     const body = `Name: ${form.get("name")}\nEmail: ${form.get("email")}\n\n${form.get("message")}`;
-    window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setStatus("Opening your email app. If nothing happens, use the direct email address.");
+    window.location.assign(mailto);
+  };
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(EMAIL);
+      setStatus("Email address copied.");
+    } catch {
+      setStatus(`Copy unavailable. Email ${EMAIL} directly.`);
+    }
   };
 
   return (
@@ -41,6 +54,7 @@ export function Contact() {
               >
                 {EMAIL} ↗
               </a>
+              <button className="copy-email-button" type="button" onClick={copyEmail}>Copy email</button>
             </div>
             <div className="contact-location">
               <span className="detail-label">Location</span>
@@ -117,6 +131,7 @@ export function Contact() {
                 <button type="submit" className="contact-submit-btn">
                   Open email draft ↗
                 </button>
+                <p className="form-status" aria-live="polite">{status}</p>
               </form>
             </div>
           </Reveal>

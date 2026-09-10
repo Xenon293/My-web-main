@@ -5,21 +5,22 @@ import { siteConfig } from "../config/site";
 
 export function Presence() {
   const [count, setCount] = useState(null);
-  const [status, setStatus] = useState("loading");
+  const [status, setStatus] = useState("idle");
   const { consent } = useCookieConsent();
 
   useEffect(() => {
     if (consent !== "accepted") {
-      setStatus("offline");
+      setStatus("idle");
+      setCount(null);
       return undefined;
     }
     const refresh = async () => {
       try {
-        const result = presence ? await presence.observe() : { status: "offline" };
+        const result = presence ? await presence.observe() : { status: "disabled" };
         setStatus(result.status);
         if (result.status === "ready") setCount(result.count);
       } catch {
-        setStatus("offline");
+        setStatus("disabled");
       }
     };
     refresh();
@@ -27,12 +28,8 @@ export function Presence() {
     return () => window.clearInterval(timer);
   }, [consent]);
 
-  const label =
-    status === "offline"
-      ? "presence unavailable"
-      : status === "loading"
-        ? "checking presence"
-        : `${count} ${count === 1 ? "person" : "people"} viewing now`;
+  if (status !== "ready") return null;
+  const label = `${count} ${count === 1 ? "person" : "people"} viewing now`;
   return (
     <span className={`presence-indicator is-${status}`} aria-label={label}>
       <span className="presence-eye" aria-hidden="true" />

@@ -17,8 +17,9 @@ npm run dev
 Create a `.env` file for the optional services:
 
 ```text
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-public-key
+VITE_SITE_URL=https://your-production-domain.example
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key
 GEMINI_API_KEY=your-server-side-key
 ```
 
@@ -41,8 +42,9 @@ Create a `presence` table with `id` and `last_seen` columns, enable row-level se
 
 Connect the repository to Netlify and set these environment variables in the site settings:
 
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `VITE_SITE_URL` (optional on Netlify; its automatic `URL` value is used by the production build)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 - `GEMINI_API_KEY`
 
 Netlify automatically detects the Vite build. The Gemini endpoint is available at `/api/ask-buddy` through `netlify/functions/ask-buddy.mjs`.
@@ -57,4 +59,4 @@ Netlify automatically detects the Vite build. The Gemini endpoint is available a
 
 ## Adding a project
 
-Add a project object to `src/data/projects.js` with its title, description, technologies, features, and repository URL. The shared `ProjectCard` component renders the project layout.
+Add a project object to `src/data/projects.js` with its case-study copy and optional `preview`, `repository`, and `demo` values. Unavailable actions remain hidden. Set `resumePath` in `src/config/site.js` after adding a real resume PDF.
