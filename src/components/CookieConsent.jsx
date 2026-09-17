@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useCookieConsent } from "../hooks/useCookieConsent";
+import { ROUTES } from "../config/routes";
 
 export function CookieConsent() {
   const { consent, decide, reset } = useCookieConsent();
@@ -15,7 +16,7 @@ export function CookieConsent() {
       <div className="cookie-copy">
         <span className="cookie-label" id="cookie-title">Your privacy matters</span>
         <p id="cookie-description">Necessary storage keeps preferences working. Optional storage helps show anonymous visitor counts.</p>
-        <a href="/privacy">Privacy &amp; Cookie Policy</a>
+        <a href={ROUTES.privacy.path}>Privacy &amp; Cookie Policy</a>
       </div>
       <div className="cookie-actions">
         <button type="button" className="button button-secondary" onClick={() => decide("rejected")}>Reject optional</button>

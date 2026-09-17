@@ -1,3 +1,5 @@
+import { projectPath } from "../config/routes";
+
 export function ProjectCard({ project }) {
   return (
     <article className="project-card">
@@ -15,7 +17,7 @@ export function ProjectCard({ project }) {
         {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
       </ul>
       <p className="project-card-outcome"><span>Outcome</span>{project.outcome}</p>
-      <a className="text-link" href={`/work/${project.slug}`}>View case study <span aria-hidden="true">→</span></a>
+      <a className="text-link" href={projectPath(project.slug)}>View case study <span aria-hidden="true">→</span></a>
     </article>
   );
 }

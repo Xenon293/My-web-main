@@ -1,36 +1,32 @@
-import { Nav } from "./components/Nav";
 import { ProjectCard } from "./components/ProjectCard";
 import { ProjectDetail } from "./components/ProjectDetail";
 import { Reveal } from "./components/Reveal";
 import { TypingTest } from "./components/TypingTest";
 import { Contact } from "./components/Contact";
 import { PixelBuddy } from "./components/PixelBuddy";
-import { Presence } from "./components/Presence";
-import { CookieConsent } from "./components/CookieConsent";
+import { BuddyAssistant } from "./components/BuddyAssistant";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { HeroBackground } from "./components/HeroBackground";
-import { Seo } from "./components/Seo";
+import { PageFrame } from "./components/PageFrame";
 import { siteConfig } from "./config/site";
 import { focusAreas, resources } from "./data/siteContent";
 import { projects } from "./data/projects";
+import { PrivacyChoiceProvider } from "./hooks/useCookieConsent";
+import { HOME_SECTIONS, ROUTES, homeSectionPath, resolveRoute } from "./config/routes";
 import "./styles.css";
 
 function App() {
-  const pathname = window.location.pathname.replace(/\/$/, "") || "/";
-  if (pathname === "/privacy") return <PrivacyPage />;
-  if (pathname.startsWith("/work/")) {
-    const project = projects.find((item) => `/work/${item.slug}` === pathname);
-    if (project) return <ProjectPage project={project} pathname={pathname} />;
-  }
+  return <PrivacyChoiceProvider><CurrentRoute /></PrivacyChoiceProvider>;
+}
+
+function CurrentRoute() {
+  const route = resolveRoute(window.location.pathname, projects);
+  if (route.id === ROUTES.privacy.id) return <PrivacyPage />;
+  if (route.id === ROUTES.buddy.id) return <BuddyPage />;
+  if (route.id === ROUTES.work.id) return <ProjectPage project={route.project} pathname={route.path} />;
 
   return (
-    <>
-      <Seo pathname="/" />
-      <Nav />
-      <div className="presence-wrap">
-        <Presence />
-      </div>
-
+    <PageFrame pathname={ROUTES.home.path} showPresence>
       <main id="top">
         {/* Hero Section */}
         <Reveal as="section" className="hero">
@@ -179,52 +175,43 @@ function App() {
         {/* 05 / Contact */}
         <Contact />
       </main>
-
-      <footer>
-        <span>Haniel Molejon</span>
-        <span>© {new Date().getFullYear()} · <a href="/privacy">Privacy &amp; Cookies</a> · Built with React + Vite</span>
-      </footer>
-      <CookieConsent />
-    </>
+    </PageFrame>
   );
 }
 
 function ProjectPage({ project, pathname }) {
   return (
-    <>
-      <Seo pathname={pathname} project={project} />
-      <Nav />
+    <PageFrame pathname={pathname} project={project}>
       <main className="project-page" id="top">
         <ProjectDetail project={project} />
         <nav className="case-study-navigation" aria-label="Project navigation">
-          <a className="privacy-home-link" href="/#work">← Back to selected work</a>
-          <a className="privacy-home-link" href="/#contact">Contact me →</a>
+          <a className="privacy-home-link" href={homeSectionPath(HOME_SECTIONS.work)}>← Back to selected work</a>
+          <a className="privacy-home-link" href={homeSectionPath(HOME_SECTIONS.contact)}>Contact me →</a>
         </nav>
       </main>
-      <footer>
-        <span>Haniel Molejon</span>
-        <span>© {new Date().getFullYear()} · <a href="/privacy">Privacy &amp; Cookies</a></span>
-      </footer>
-      <CookieConsent />
-    </>
+    </PageFrame>
   );
 }
 
 function PrivacyPage() {
   return (
-    <>
-      <Seo pathname="/privacy" />
-      <Nav />
+    <PageFrame pathname={ROUTES.privacy.path}>
       <main className="privacy-page" id="top">
         <PrivacyPolicy />
         <a className="privacy-home-link" href="/">← Back to portfolio</a>
       </main>
-      <footer>
-        <span>Haniel Molejon</span>
-        <span>© {new Date().getFullYear()} · <a href="/">Portfolio</a></span>
-      </footer>
-      <CookieConsent />
-    </>
+    </PageFrame>
+  );
+}
+
+function BuddyPage() {
+  return (
+    <PageFrame pathname={ROUTES.buddy.path}>
+      <main className="buddy-page" id="top">
+        <BuddyAssistant />
+        <a className="privacy-home-link" href="/">← Back to portfolio</a>
+      </main>
+    </PageFrame>
   );
 }
 

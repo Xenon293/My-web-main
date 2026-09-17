@@ -1,23 +1,48 @@
-import { useEffect, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { siteConfig } from "../config/site";
 
-export function getOptionalConsent() {
-  return window.localStorage.getItem(siteConfig.consentStorageKey) === "accepted";
+const PrivacyChoiceContext = createContext(null);
+
+function readConsent() {
+  return window.localStorage.getItem(siteConfig.consentStorageKey);
 }
 
-export function useCookieConsent() {
-  const [consent, setConsent] = useState(null);
+export function getOptionalConsent() {
+  return readConsent() === "accepted";
+}
+
+export function PrivacyChoiceProvider({ children }) {
+  const [consent, setConsent] = useState(readConsent);
+
   useEffect(() => {
-    setConsent(window.localStorage.getItem(siteConfig.consentStorageKey));
+    const syncAcrossTabs = (event) => {
+      if (event.key === siteConfig.consentStorageKey) setConsent(event.newValue);
+    };
+    window.addEventListener("storage", syncAcrossTabs);
+    return () => window.removeEventListener("storage", syncAcrossTabs);
   }, []);
-  const decide = (value) => {
+
+  const decide = useCallback((value) => {
     if (value === null) {
       window.localStorage.removeItem(siteConfig.consentStorageKey);
     } else {
       window.localStorage.setItem(siteConfig.consentStorageKey, value);
     }
     setConsent(value);
-    window.dispatchEvent(new CustomEvent("cookie-consent", { detail: value }));
-  };
-  return { consent, decide, reset: () => decide(null), hasOptionalConsent: consent === "accepted" };
+  }, []);
+
+  const value = useMemo(() => ({
+    consent,
+    decide,
+    reset: () => decide(null),
+    hasOptionalConsent: consent === "accepted",
+  }), [consent, decide]);
+
+  return createElement(PrivacyChoiceContext.Provider, { value }, children);
+}
+
+export function useCookieConsent() {
+  const choice = useContext(PrivacyChoiceContext);
+  if (!choice) throw new Error("useCookieConsent must be used inside PrivacyChoiceProvider");
+  return choice;
 }

@@ -1,13 +1,6 @@
 import { useEffect } from "react";
 import { siteConfig } from "../config/site";
-
-const routeMetadata = {
-  "/": { title: siteConfig.title, description: siteConfig.description },
-  "/privacy": {
-    title: `Privacy & Cookie Policy — ${siteConfig.name}`,
-    description: "How this portfolio uses browser storage, optional presence tracking, and third-party services.",
-  },
-};
+import { ROUTES, resolveRoute } from "../config/routes";
 
 function setMeta(selector, attributes) {
   let element = document.head.querySelector(selector);
@@ -23,7 +16,9 @@ export function getRouteMetadata(pathname, project) {
     title: `${project.title} case study — ${siteConfig.name}`,
     description: project.description,
   };
-  return routeMetadata[pathname] || routeMetadata["/"];
+  const route = resolveRoute(pathname);
+  if (route.id === ROUTES.home.id) return { title: siteConfig.title, description: siteConfig.description };
+  return { title: `${route.title} — ${siteConfig.name}`, description: route.description };
 }
 
 export function Seo({ pathname, project }) {

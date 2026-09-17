@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ROUTES, homeSectionPath, normalizePathname } from "../config/routes";
 
 const links = [
   { label: "About", href: "#about", icon: "↳" },
@@ -9,7 +10,7 @@ const links = [
 ];
 
 export function Nav() {
-  const isSubpage = window.location.pathname !== "/";
+  const isSubpage = normalizePathname(window.location.pathname) !== ROUTES.home.path;
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const navRef = useRef(null);
@@ -174,7 +175,7 @@ export function Nav() {
             {links.map((link) => (
               <a
                 key={link.href}
-                href={isSubpage ? `/${link.href}` : link.href}
+                href={homeSectionPath(link.href.slice(1), isSubpage)}
                 onClick={() => setOpen(false)}
               >
                 <span className="nav-icon" aria-hidden="true">
@@ -187,6 +188,10 @@ export function Nav() {
 
           <div className="nav-group nav-secondary">
             <span className="nav-group-label">Elsewhere</span>
+            <a href={ROUTES.buddy.path} onClick={() => setOpen(false)}>
+              <span className="nav-icon" aria-hidden="true">?</span>
+              Ask Buddy
+            </a>
             <a
               href="https://github.com/Xenon293"
               target="_blank"

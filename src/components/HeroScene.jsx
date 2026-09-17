@@ -7,6 +7,7 @@ function readThemeColors() {
   return {
     accent: styles.getPropertyValue("--accent").trim() || "#c87958",
     ink: styles.getPropertyValue("--ink").trim() || "#171815",
+    paper: styles.getPropertyValue("--paper").trim() || "#f4f1ea",
   };
 }
 
@@ -20,35 +21,77 @@ function useThemeColors() {
   return colors;
 }
 
-function TerrainScene() {
-  const terrain = useRef(null);
-  const orb = useRef(null);
+function seededRandom(seed) {
+  let value = seed;
+  return () => {
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function createStarField(count, seed, depth) {
+  const random = seededRandom(seed);
+  const positions = new Float32Array(count * 3);
+  for (let index = 0; index < count; index += 1) {
+    const offset = index * 3;
+    positions[offset] = -1.4 + random() * 8.6;
+    positions[offset + 1] = -3.2 + random() * 6.4;
+    positions[offset + 2] = depth - random() * 1.8;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return geometry;
+}
+
+function PixelStars({ count, seed, depth, color, opacity, size }) {
+  const geometry = useMemo(() => createStarField(count, seed, depth), [count, seed, depth]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial color={color} opacity={opacity} transparent depthWrite={false} size={size} sizeAttenuation toneMapped={false} />
+    </points>
+  );
+}
+
+function PixelPlanet({ colors }) {
+  return (
+    <group position={[2.15, .42, -.15]} rotation={[.12, -.18, -.08]}>
+      <mesh>
+        <sphereGeometry args={[.63, 12, 8]} />
+        <meshStandardMaterial color={colors.accent} roughness={.9} flatShading />
+      </mesh>
+      <mesh position={[-.2, .15, .57]} scale={[.18, .1, .06]}>
+        <boxGeometry />
+        <meshBasicMaterial color={colors.paper} transparent opacity={.42} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2.25, .08, 0]}>
+        <torusGeometry args={[.9, .035, 4, 32]} />
+        <meshBasicMaterial color={colors.ink} transparent opacity={.38} />
+      </mesh>
+      <mesh position={[1.35, .72, -.7]}>
+        <sphereGeometry args={[.14, 6, 4]} />
+        <meshBasicMaterial color={colors.ink} transparent opacity={.58} />
+      </mesh>
+    </group>
+  );
+}
+
+function GalaxyScene() {
+  const farStars = useRef(null);
+  const nearStars = useRef(null);
+  const celestial = useRef(null);
+  const shootingStar = useRef(null);
+  const shootingMaterial = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
   const colors = useThemeColors();
-  const geometry = useMemo(() => {
-    const plane = new THREE.PlaneGeometry(12, 8, 28, 18);
-    const positions = plane.attributes.position;
-    for (let index = 0; index < positions.count; index += 1) {
-      const x = positions.getX(index);
-      const y = positions.getY(index);
-      const height = Math.sin(x * 1.15) * .18 + Math.cos(y * 1.45) * .14 + Math.sin((x + y) * .7) * .12;
-      positions.setZ(index, height);
-    }
-    positions.needsUpdate = true;
-    plane.computeVertexNormals();
-    return plane;
-  }, []);
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => {
     const updatePointer = (event) => {
       pointer.current.x = THREE.MathUtils.clamp(event.clientX / window.innerWidth * 2 - 1, -1, 1);
       pointer.current.y = THREE.MathUtils.clamp(event.clientY / window.innerHeight * 2 - 1, -1, 1);
     };
-    const resetPointer = () => {
-      pointer.current.x = 0;
-      pointer.current.y = 0;
-    };
+    const resetPointer = () => { pointer.current = { x: 0, y: 0 }; };
     window.addEventListener("pointermove", updatePointer, { passive: true });
     document.documentElement.addEventListener("pointerleave", resetPointer);
     window.addEventListener("blur", resetPointer);
@@ -60,61 +103,45 @@ function TerrainScene() {
   }, []);
 
   useFrame((state, delta) => {
-    if (!terrain.current || !orb.current) return;
-    const elapsed = state.clock.elapsedTime;
+    if (!farStars.current || !nearStars.current || !celestial.current) return;
+    farStars.current.position.x = THREE.MathUtils.damp(farStars.current.position.x, pointer.current.x * .06, 2.2, delta);
+    farStars.current.position.y = THREE.MathUtils.damp(farStars.current.position.y, -pointer.current.y * .035, 2.2, delta);
+    nearStars.current.position.x = THREE.MathUtils.damp(nearStars.current.position.x, pointer.current.x * .16, 2.8, delta);
+    nearStars.current.position.y = THREE.MathUtils.damp(nearStars.current.position.y, -pointer.current.y * .1, 2.8, delta);
+    celestial.current.position.x = THREE.MathUtils.damp(celestial.current.position.x, pointer.current.x * .24, 3, delta);
+    celestial.current.position.y = THREE.MathUtils.damp(celestial.current.position.y, -pointer.current.y * .14, 3, delta);
+    celestial.current.rotation.y += delta * .035;
 
-    terrain.current.rotation.y = THREE.MathUtils.damp(terrain.current.rotation.y, pointer.current.x * .07, 2.8, delta);
-    terrain.current.rotation.x = THREE.MathUtils.damp(terrain.current.rotation.x, pointer.current.y * .035, 2.8, delta);
-    terrain.current.position.y = THREE.MathUtils.damp(
-      terrain.current.position.y,
-      -.55 + Math.sin(elapsed * .28) * .018,
-      2.4,
-      delta,
-    );
-
-    orb.current.position.x = THREE.MathUtils.damp(orb.current.position.x, 1.4 + pointer.current.x * .22, 3.2, delta);
-    orb.current.position.y = THREE.MathUtils.damp(
-      orb.current.position.y,
-      .8 - pointer.current.y * .14 + Math.sin(elapsed * .38) * .045,
-      3.2,
-      delta,
-    );
-    orb.current.rotation.y += delta * .045;
+    if (shootingStar.current && shootingMaterial.current) {
+      const cycle = state.clock.elapsedTime % 13;
+      const active = cycle > 9.8 && cycle < 10.9;
+      const progress = THREE.MathUtils.clamp((cycle - 9.8) / 1.1, 0, 1);
+      shootingStar.current.visible = active;
+      shootingStar.current.position.set(3.8 - progress * 3.2, 2.35 - progress * 1.35, .2);
+      shootingMaterial.current.opacity = active ? Math.sin(progress * Math.PI) * .5 : 0;
+    }
   });
 
   return (
-    <group position={[2.2, 0, 0]}>
-      <group ref={terrain} position={[0, -.55, 0]}>
-        <mesh geometry={geometry} rotation={[-Math.PI / 2.8, 0, -.2]} position={[0, -1.15, -1.2]}>
-          <meshBasicMaterial color={colors.ink} wireframe transparent opacity={.14} />
-        </mesh>
+    <group position={[1.5, 0, 0]}>
+      <group ref={farStars}>
+        <PixelStars count={72} seed={7283} depth={-2.8} color={colors.ink} opacity={.32} size={.042} />
       </group>
-      <ambientLight intensity={1.15} />
-      <pointLight position={[2.7, 2.8, 3.6]} color={colors.accent} intensity={5.5} distance={7} />
-      <group ref={orb} position={[1.4, .8, .4]}>
-        <mesh position={[0, 0, -.18]} scale={1.36}>
-          <sphereGeometry args={[.72, 32, 24]} />
-          <meshBasicMaterial color={colors.accent} transparent opacity={.055} depthWrite={false} />
+      <group ref={nearStars}>
+        <PixelStars count={42} seed={1947} depth={-.8} color={colors.accent} opacity={.58} size={.062} />
+        <PixelStars count={24} seed={5119} depth={.1} color={colors.ink} opacity={.64} size={.078} />
+      </group>
+      <ambientLight intensity={1.45} />
+      <directionalLight position={[3, 4, 5]} color={colors.paper} intensity={1.2} />
+      <group ref={celestial}><PixelPlanet colors={colors} /></group>
+      <group ref={shootingStar} visible={false} rotation={[0, 0, -.38]}>
+        <mesh scale={[.7, .025, .025]}>
+          <boxGeometry />
+          <meshBasicMaterial ref={shootingMaterial} color={colors.accent} transparent opacity={0} depthWrite={false} />
         </mesh>
-        <mesh>
-          <sphereGeometry args={[.72, 40, 28]} />
-          <meshPhysicalMaterial
-            color={colors.accent}
-            roughness={.2}
-            metalness={0}
-            transparent
-            opacity={.72}
-            transmission={.18}
-            thickness={.35}
-            clearcoat={.8}
-            clearcoatRoughness={.18}
-            emissive={colors.accent}
-            emissiveIntensity={.025}
-          />
-        </mesh>
-        <mesh position={[-.2, .22, .58]} scale={.13}>
-          <sphereGeometry args={[.72, 20, 14]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={.3} depthWrite={false} />
+        <mesh position={[.38, 0, 0]} scale={.07}>
+          <boxGeometry />
+          <meshBasicMaterial color={colors.paper} />
         </mesh>
       </group>
     </group>
@@ -124,12 +151,12 @@ function TerrainScene() {
 export default function HeroScene() {
   return (
     <Canvas
-      camera={{ position: [0, 1.1, 6.8], fov: 42 }}
+      camera={{ position: [0, .25, 7], fov: 42 }}
       dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: false, powerPreference: "low-power" }}
       style={{ background: "transparent" }}
     >
-      <TerrainScene />
+      <GalaxyScene />
     </Canvas>
   );
 }
