@@ -1330,6 +1330,64 @@ h2 {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.buddy-page-loading { width: min(920px, 100%); min-height: 60vh; margin: 0 auto; color: var(--muted); }
+.buddy-answer {
+  max-width: 72ch;
+  margin-top: 18px;
+  color: var(--ink);
+  font: 400 clamp(1rem, 1.7vw, 1.16rem)/1.72 var(--sans);
+  overflow-wrap: anywhere;
+}
+.buddy-answer > :first-child { margin-top: 0; }
+.buddy-answer > :last-child { margin-bottom: 0; }
+.buddy-answer h1,
+.buddy-answer h2,
+.buddy-answer h3,
+.buddy-answer h4 {
+  max-width: 34ch;
+  margin: 1.7em 0 .55em;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+.buddy-answer h1 { font-size: 1.75em; }
+.buddy-answer h2 { font-size: 1.5em; }
+.buddy-answer h3 { font-size: 1.28em; }
+.buddy-answer h4 { font-size: 1.08em; }
+.buddy-answer p { margin: 0 0 1em; font: inherit; white-space: normal; }
+.buddy-answer ul,
+.buddy-answer ol { margin: .55em 0 1.2em; padding-left: 1.4em; }
+.buddy-answer li { margin: .38em 0; padding-left: .25em; }
+.buddy-answer li::marker { color: var(--accent); font-family: var(--mono); font-weight: 700; }
+.buddy-answer strong { font-weight: 700; }
+.buddy-answer hr { height: 1px; margin: 1.7em 0; border: 0; background: var(--line); }
+.buddy-answer code:not(.katex *) {
+  padding: .12em .34em;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  font: .88em/1.5 var(--mono);
+}
+.buddy-answer pre {
+  max-width: 100%;
+  margin: 1.25em 0;
+  padding: 16px;
+  overflow-x: auto;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--ink) 7%, var(--paper));
+}
+.buddy-answer pre code { padding: 0; background: transparent; }
+.buddy-answer .katex-display {
+  margin: 1.25em 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  text-align: left;
+}
+.buddy-answer .katex { font-size: 1.06em; }
+.buddy-page-response > .buddy-caret { display: inline-block; margin-top: 8px; }
 .buddy-page-form {
   padding: clamp(20px, 4vw, 32px);
   border: 1px solid var(--line);

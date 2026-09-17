@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { BuddyAnswer } from "./BuddyAnswer";
 
 const questions = {
   "Who is Haniel?": "Haniel is an IT student from Cebu learning by building small, useful things with code.",
@@ -14,6 +15,7 @@ export function BuddyAssistant() {
   const [context, setContext] = useState(false);
   const [loading, setLoading] = useState(false);
   const [displayAnswer, setDisplayAnswer] = useState("");
+  const [typing, setTyping] = useState(false);
   const [promptCount, setPromptCount] = useState(() => {
     try {
       const usage = JSON.parse(localStorage.getItem("buddy-prompts") || "{}");
@@ -22,20 +24,26 @@ export function BuddyAssistant() {
   });
 
   useEffect(() => {
-    if (loading) { setDisplayAnswer("Give me a second to think that through."); return undefined; }
+    if (loading) { setDisplayAnswer("Give me a second to think that through."); setTyping(false); return undefined; }
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const area = timezone.includes("/") ? timezone.split("/").pop().replaceAll("_", " ") : "an unknown area";
     const localTime = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(new Date());
     const text = context
       ? `I can make a rough guess from your timezone: ${area}. It is ${localTime} for you. I can also see a ${window.innerWidth} x ${window.innerHeight} screen, ${navigator.language} language, and ${navigator.cookieEnabled ? "browser storage is enabled" : "browser storage is disabled"}. I cannot see your exact location or private data. Nothing was sent anywhere.`
       : answer;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setDisplayAnswer(text); return undefined; }
+    const hasStructuredFormatting = /(^|\n)(#{1,6}\s|[-*+]\s|\d+\.\s|```|---)|\$\$|\|.+\|/m.test(text);
+    if (hasStructuredFormatting || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayAnswer(text);
+      setTyping(false);
+      return undefined;
+    }
     setDisplayAnswer("");
+    setTyping(true);
     let index = 0;
     const timer = window.setInterval(() => {
       index += 3;
       setDisplayAnswer(text.slice(0, index));
-      if (index >= text.length) window.clearInterval(timer);
+      if (index >= text.length) { window.clearInterval(timer); setTyping(false); }
     }, 12);
     return () => window.clearInterval(timer);
   }, [answer, context, loading]);
@@ -81,7 +89,8 @@ export function BuddyAssistant() {
       </header>
       <div className={`buddy-page-response ${context ? "is-context" : ""}`} aria-live="polite" aria-busy={loading}>
         <span className="buddy-response-label">{loading ? "thinking" : context ? "browser check" : "buddy says"}</span>
-        <p>{displayAnswer}<span className="buddy-caret" aria-hidden="true">▌</span></p>
+        <BuddyAnswer>{displayAnswer}</BuddyAnswer>
+        {typing ? <span className="buddy-caret" aria-hidden="true">▌</span> : null}
       </div>
       <form className="buddy-page-form" onSubmit={askGemini}>
         <label htmlFor="buddy-question">What would you like to learn or know?</label>

@@ -1,10 +1,10 @@
+import { lazy, Suspense } from "react";
 import { ProjectCard } from "./components/ProjectCard";
 import { ProjectDetail } from "./components/ProjectDetail";
 import { Reveal } from "./components/Reveal";
 import { TypingTest } from "./components/TypingTest";
 import { Contact } from "./components/Contact";
 import { PixelBuddy } from "./components/PixelBuddy";
-import { BuddyAssistant } from "./components/BuddyAssistant";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { HeroBackground } from "./components/HeroBackground";
 import { PageFrame } from "./components/PageFrame";
@@ -14,6 +14,10 @@ import { projects } from "./data/projects";
 import { PrivacyChoiceProvider } from "./hooks/useCookieConsent";
 import { HOME_SECTIONS, ROUTES, homeSectionPath, resolveRoute } from "./config/routes";
 import "./styles.css";
+
+const BuddyAssistant = lazy(() =>
+  import("./components/BuddyAssistant").then((module) => ({ default: module.BuddyAssistant })),
+);
 
 function App() {
   return <PrivacyChoiceProvider><CurrentRoute /></PrivacyChoiceProvider>;
@@ -208,7 +212,9 @@ function BuddyPage() {
   return (
     <PageFrame pathname={ROUTES.buddy.path}>
       <main className="buddy-page" id="top">
-        <BuddyAssistant />
+        <Suspense fallback={<p className="buddy-page-loading">Preparing Buddy…</p>}>
+          <BuddyAssistant />
+        </Suspense>
         <a className="privacy-home-link" href="/">← Back to portfolio</a>
       </main>
     </PageFrame>
