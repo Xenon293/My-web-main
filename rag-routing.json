@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "root": ".",
+  "routes": [
+    {
+      "pattern": "src/components/**/*",
+      "skills": [
+        ".agents/skills/design-taste-frontend/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/pages/**/*",
+      "skills": [
+        ".agents/skills/frontend-design/SKILL.md",
+        ".agents/skills/improve-codebase-architecture/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/hooks/**/*",
+      "skills": [
+        ".agents/skills/systematic-debugging/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/services/**/*",
+      "skills": [
+        ".agents/skills/systematic-debugging/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/data/**/*",
+      "skills": [
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/improve-codebase-architecture/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/utils/**/*",
+      "skills": [
+        ".agents/skills/systematic-debugging/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "netlify/functions/**/*",
+      "skills": [
+        ".agents/skills/systematic-debugging/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/**/*.test.{js,jsx,ts,tsx}",
+      "skills": [
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/systematic-debugging/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "src/**/*.{css,scss}",
+      "skills": [
+        ".agents/skills/design-taste-frontend/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "{package.json,vite.config.js,netlify.toml,index.html}",
+      "skills": [
+        ".agents/skills/improve-codebase-architecture/SKILL.md",
+        ".agents/skills/code-review/SKILL.md"
+      ]
+    },
+    {
+      "pattern": "**/*",
+      "skills": [
+        ".agents/skills/find-skills/SKILL.md"
+      ]
+    }
+  ]
+}
