@@ -1,20 +1,26 @@
-Portfolio
+# Haniel’s portfolio
 
-A personal portfolio built with React, Vite, and plain CSS.
+This is my personal portfolio site, built with React and Vite. It brings together my projects, technical stack, certifications, learning experiments, contact details, and a small assistant called Buddy.
 
-## Requirements
+## Run it locally
 
-- Node.js 18 or newer
-- npm
-
-## Local development
+You’ll need Node.js 18 or newer and npm.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Create a `.env` file for the optional services:
+Vite will print the local URL in the terminal. The production build can be previewed with:
+
+```bash
+npm run build
+npm run preview
+```
+
+## Environment variables
+
+Create a `.env` file when you want to enable the optional services:
 
 ```text
 VITE_SITE_URL=https://your-production-domain.example
@@ -23,40 +29,35 @@ VITE_SUPABASE_ANON_KEY=your-anon-public-key
 GEMINI_API_KEY=your-server-side-key
 ```
 
-The Supabase variables power the anonymous live-presence indicator. The Gemini key is used only by the Netlify Function and must never be prefixed with `VITE_` or exposed in client code.
+Variables beginning with `VITE_` are available to the browser. `GEMINI_API_KEY` is used only by the Netlify Function and must stay server-side; do not rename it to `VITE_GEMINI_API_KEY`.
 
-## Production build
+Supabase powers the optional live-presence indicator. It only starts after a visitor accepts optional storage, and the site quietly disables it when the Supabase variables are missing. The complete privacy and cookie policy is available at [`/privacy`](/privacy).
 
-```bash
-npm run build
-npm run preview
-```
+## Buddy
 
-The production files are generated in `dist/`.
+Buddy answers questions about the portfolio and can also help with general educational topics such as programming, science, writing, and mathematics. Its request is handled by the Netlify Function at `/api/ask-buddy`, which calls Gemini using the server-only API key.
 
-## Supabase presence setup
+## Deployment
 
-Create a `presence` table with `id` and `last_seen` columns, enable row-level security, and add policies that allow anonymous clients to update a session row and read the active count. The client uses temporary anonymous IDs and stores no personal information.
+The site is configured for Netlify. Set these values in the Netlify site settings:
 
-## Netlify deployment
-
-Connect the repository to Netlify and set these environment variables in the site settings:
-
-- `VITE_SITE_URL` (optional on Netlify; its automatic `URL` value is used by the production build)
+- `VITE_SITE_URL` (optional when Netlify’s automatic `URL` value is available)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `GEMINI_API_KEY`
 
-Netlify automatically detects the Vite build. The Gemini endpoint is available at `/api/ask-buddy` through `netlify/functions/ask-buddy.mjs`.
+Netlify builds the Vite app and serves the Buddy function from `netlify/functions/ask-buddy.mjs`.
 
-## Project structure
+## Project layout
 
-- `src/components/` — reusable page and interaction components
-- `src/data/` — portfolio content
-- `src/lib/` — external service clients
-- `netlify/functions/` — server-side functions
-- `public/` — static assets
+- `src/components/` — reusable interface and interaction pieces
+- `src/data/` — portfolio and profile content
+- `src/config/` — site settings and lightweight route definitions
+- `src/hooks/` — reusable browser-state and behavior hooks
+- `src/pages/` — page-level content for lightweight pathname-based navigation
+- `netlify/functions/` — server-side endpoints
+- `public/` — static assets and search metadata
 
 ## Adding a project
 
-Add a project object to `src/data/projects.js` with its case-study copy and optional `preview`, `repository`, and `demo` values. Unavailable actions remain hidden. Set `resumePath` in `src/config/site.js` after adding a real resume PDF.
+Add a project entry to the portfolio data with its case-study details. Repository and demo actions are optional; leave them unset until the exact public URLs are ready. After adding a real resume PDF, set its path in `src/config/site.js` so the resume action can be enabled.
