@@ -17,7 +17,7 @@ export function Certifications() {
               <span>{certification.issuer}</span>
               <h3>{certification.name}</h3>
             </div>
-            <a href={certification.credential} target="_blank" rel="noreferrer" aria-label={`Verify ${certification.name} on Credly`}>
+            <a href={certification.credential} target="_blank" rel="noopener noreferrer" aria-label={`Verify ${certification.name} on Credly`}>
               Verify <span aria-hidden="true">{"\u2197"}</span>
             </a>
           </li>

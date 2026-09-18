@@ -48,6 +48,8 @@ The site is configured for Netlify. Set these values in the Netlify site setting
 
 Netlify builds the Vite app and serves the Buddy function from `netlify/functions/ask-buddy.mjs`.
 
+The site sends security headers through Netlify, including an enforced Content Security Policy. The policy still permits the inline theme bootstrap and structured metadata used by the static Vite document; these should be replaced with hashes or nonces if the site later gains more dynamic inline scripts. Buddy uses a lightweight in-memory rate limit, so it is a best-effort control rather than a durable distributed abuse-prevention system.
+
 ## Project layout
 
 - `src/components/` — reusable interface and interaction pieces

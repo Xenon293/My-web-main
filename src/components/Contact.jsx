@@ -66,13 +66,13 @@ export function Contact() {
               <a
                 href={siteConfig.github}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="social-btn"
               >
                 GitHub <LineIcon name="arrowUpRight" size={16} />
               </a>
               <span className="social-sep">·</span>
-              <a href={siteConfig.instagram} target="_blank" rel="noreferrer" className="social-btn">
+              <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer" className="social-btn">
                 Instagram <LineIcon name="arrowUpRight" size={16} />
               </a>
             </div>

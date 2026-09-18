@@ -20,14 +20,16 @@
       "pattern": "src/hooks/**/*",
       "skills": [
         ".agents/skills/systematic-debugging/SKILL.md",
-        ".agents/skills/code-review/SKILL.md"
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/security-and-hardening/SKILL.md"
       ]
     },
     {
       "pattern": "src/services/**/*",
       "skills": [
         ".agents/skills/systematic-debugging/SKILL.md",
-        ".agents/skills/code-review/SKILL.md"
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/security-and-hardening/SKILL.md"
       ]
     },
     {
@@ -47,7 +49,8 @@
       "pattern": "netlify/functions/**/*",
       "skills": [
         ".agents/skills/systematic-debugging/SKILL.md",
-        ".agents/skills/code-review/SKILL.md"
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/security-and-hardening/SKILL.md"
       ]
     },
     {
@@ -68,7 +71,14 @@
       "pattern": "{package.json,vite.config.js,netlify.toml,index.html}",
       "skills": [
         ".agents/skills/improve-codebase-architecture/SKILL.md",
-        ".agents/skills/code-review/SKILL.md"
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/security-and-hardening/SKILL.md"
+      ]
+    },
+    {
+      "pattern": ".env.example",
+      "skills": [
+        ".agents/skills/security-and-hardening/SKILL.md"
       ]
     },
     {

@@ -18,7 +18,7 @@ export default function ResourcesPage() {
             <ul>
               {group.links.map((link) => (
                 <li key={link.url}>
-                  <a href={link.url} target="_blank" rel="noreferrer">
+                  <a href={link.url} target="_blank" rel="noopener noreferrer">
                     <span>{link.name}</span><LineIcon name="arrowUpRight" size={16} />
                   </a>
                 </li>

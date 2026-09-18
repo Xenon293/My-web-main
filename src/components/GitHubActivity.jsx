@@ -66,7 +66,7 @@ export function GitHubActivity() {
               {state.status === "ready" ? `${state.total} contributions in the last year` : "Public GitHub activity"}
             </span>
           </div>
-          <a href={siteConfig.github} target="_blank" rel="noreferrer">
+          <a href={siteConfig.github} target="_blank" rel="noopener noreferrer">
             View profile <LineIcon name="arrowUpRight" size={15} />
           </a>
         </div>

@@ -1,20 +1,38 @@
 const attempts = new Map();
 const WINDOW = 8 * 60 * 60 * 1000;
 const LIMIT = 5;
+const MAX_PROMPT_LENGTH = 500;
+const REQUEST_TIMEOUT = 20_000;
+
+function json(body, status = 200) {
+  return Response.json(body, {
+    status,
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+
+function allowedOrigin(origin) {
+  if (!origin) return true;
+  if (origin === "http://localhost:5173" || origin === "http://127.0.0.1:5173") return true;
+  const configured = process.env.URL || process.env.VITE_SITE_URL;
+  return Boolean(configured && origin === configured.replace(/\/$/, ""));
+}
 
 export default async (request) => {
   if (request.method !== "POST")
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
-  const { prompt } = await request.json().catch(() => ({}));
+    return json({ error: "Method not allowed" }, 405);
+  if (!request.headers.get("content-type")?.toLowerCase().includes("application/json"))
+    return json({ error: "JSON requests are required." }, 415);
+  if (!allowedOrigin(request.headers.get("origin")))
+    return json({ error: "Request origin is not allowed." }, 403);
+  const body = await request.json().catch(() => null);
+  const prompt = body && typeof body === "object" ? body.prompt : undefined;
   if (
     typeof prompt !== "string" ||
     prompt.trim().length < 2 ||
-    prompt.length > 500
+    prompt.length > MAX_PROMPT_LENGTH
   )
-    return Response.json(
-      { error: "Please ask a short question." },
-      { status: 400 },
-    );
+    return json({ error: "Please ask a short question." }, 400);
   const ip = request.headers.get("x-nf-client-connection-ip") || "unknown";
   const now = Date.now();
   const record = attempts.get(ip) || { count: 0, started: now };
@@ -23,18 +41,9 @@ export default async (request) => {
     record.started = now;
   }
   if (record.count >= LIMIT)
-    return Response.json(
-      { error: "Buddy needs a rest. Try again in 8 hours." },
-      { status: 429 },
-    );
+    return json({ error: "Buddy needs a rest. Try again in 8 hours." }, 429);
   if (!process.env.GEMINI_API_KEY)
-    return Response.json(
-      {
-        error:
-          "Gemini is not configured yet. Use the preset questions for now.",
-      },
-      { status: 503 },
-    );
+    return json({ error: "Gemini is not configured yet. Use the preset questions for now." }, 503);
   record.count += 1;
   attempts.set(ip, record);
   const headers = {
@@ -43,20 +52,11 @@ export default async (request) => {
   };
   const modelsResponse = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models",
-    { headers: { "x-goog-api-key": process.env.GEMINI_API_KEY } },
+    { headers: { "x-goog-api-key": process.env.GEMINI_API_KEY }, signal: AbortSignal.timeout(REQUEST_TIMEOUT) },
   );
   if (!modelsResponse.ok) {
-    console.error(
-      "Gemini models request failed:",
-      modelsResponse.status,
-      await modelsResponse.text(),
-    );
-    return Response.json(
-      {
-        error: `Gemini key could not list available models (${modelsResponse.status}).`,
-      },
-      { status: 502 },
-    );
+    console.error("Gemini models request failed with status", modelsResponse.status);
+    return json({ error: "Buddy is temporarily unavailable. Try again later." }, 502);
   }
   const models = (await modelsResponse.json()).models || [];
   const canGenerate = (item) =>
@@ -71,10 +71,7 @@ export default async (request) => {
     models.find((item) => item.name?.includes("flash") && canGenerate(item)) ||
     models.find(canGenerate);
   if (!model)
-    return Response.json(
-      { error: "This Gemini key has no model available for text generation." },
-      { status: 502 },
-    );
+    return json({ error: "Buddy is temporarily unavailable. Try again later." }, 502);
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/${model.name}:generateContent`,
     {
@@ -90,24 +87,21 @@ export default async (request) => {
         },
         contents: [{ role: "user", parts: [{ text: prompt.trim() }] }],
       }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT),
     },
   );
   if (!response.ok) {
-    console.error(
-      "Gemini request failed:",
-      response.status,
-      await response.text(),
-    );
+    console.error("Gemini request failed with status", response.status);
     const message =
       response.status === 401 || response.status === 403
-        ? "Gemini rejected the API key. Check that it is an active Google AI Studio key."
+        ? "Buddy is temporarily unavailable."
         : response.status === 429
           ? "Gemini quota is currently exhausted. Try again later."
-          : `Gemini returned an error (${response.status}).`;
-    return Response.json({ error: message }, { status: 502 });
+          : "Buddy is temporarily unavailable. Try again later.";
+    return json({ error: message }, 502);
   }
   const data = await response.json();
-  return Response.json({
+  return json({
     answer:
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
       "Buddy could not think of an answer.",

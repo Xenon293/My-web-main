@@ -75,7 +75,11 @@ export function BuddyAssistant() {
       setAnswer(data.answer || data.error || "No answer returned.");
       const next = promptCount + 1;
       setPromptCount(next);
-      const oldUsage = JSON.parse(localStorage.getItem("buddy-prompts") || "{}");
+      let oldUsage = {};
+      try {
+        const stored = JSON.parse(localStorage.getItem("buddy-prompts") || "{}");
+        oldUsage = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+      } catch { oldUsage = {}; }
       localStorage.setItem("buddy-prompts", JSON.stringify({ count: next, started: oldUsage.started || Date.now() }));
       setQuery("");
     } catch { setAnswer("Buddy is unavailable right now. Try one of the local questions below."); }

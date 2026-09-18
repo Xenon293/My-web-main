@@ -33,8 +33,8 @@ export function Footer({ onPrivacyOpen }) {
           <h2>Connect</h2>
           <ul>
             <li><a href={`mailto:${siteConfig.email}`}>Email</a></li>
-            <li><a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub <LineIcon name="arrowUpRight" size={14} /></a></li>
-            <li><a href={siteConfig.instagram} target="_blank" rel="noreferrer">Instagram <LineIcon name="arrowUpRight" size={14} /></a></li>
+            <li><a href={siteConfig.github} target="_blank" rel="noopener noreferrer">GitHub <LineIcon name="arrowUpRight" size={14} /></a></li>
+            <li><a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer">Instagram <LineIcon name="arrowUpRight" size={14} /></a></li>
             <li><a href={ROUTES.privacy.path} onClick={onPrivacyOpen}>Privacy</a></li>
           </ul>
         </div>
