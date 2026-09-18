@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BuddyAnswer } from "./BuddyAnswer";
+import { BuddyAnswer, hasStructuredBuddyFormatting, normalizeBuddyMarkdown } from "./BuddyAnswer";
 
 const questions = {
   "Who is Haniel?": "Haniel is an IT student from Cebu learning by building small, useful things with code.",
@@ -31,9 +31,10 @@ export function BuddyAssistant() {
     const text = context
       ? `I can make a rough guess from your timezone: ${area}. It is ${localTime} for you. I can also see a ${window.innerWidth} x ${window.innerHeight} screen, ${navigator.language} language, and ${navigator.cookieEnabled ? "browser storage is enabled" : "browser storage is disabled"}. I cannot see your exact location or private data. Nothing was sent anywhere.`
       : answer;
-    const hasStructuredFormatting = /(^|\n)(#{1,6}\s|[-*+]\s|\d+\.\s|```|---)|\$\$|\|.+\|/m.test(text);
+    const normalizedText = normalizeBuddyMarkdown(text);
+    const hasStructuredFormatting = hasStructuredBuddyFormatting(normalizedText);
     if (hasStructuredFormatting || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplayAnswer(text);
+      setDisplayAnswer(normalizedText);
       setTyping(false);
       return undefined;
     }
@@ -42,8 +43,8 @@ export function BuddyAssistant() {
     let index = 0;
     const timer = window.setInterval(() => {
       index += 3;
-      setDisplayAnswer(text.slice(0, index));
-      if (index >= text.length) { window.clearInterval(timer); setTyping(false); }
+      setDisplayAnswer(normalizedText.slice(0, index));
+      if (index >= normalizedText.length) { window.clearInterval(timer); setTyping(false); }
     }, 12);
     return () => window.clearInterval(timer);
   }, [answer, context, loading]);
