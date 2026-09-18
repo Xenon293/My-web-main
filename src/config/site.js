@@ -7,6 +7,7 @@ export const siteConfig = {
   email: "hanielvantecil@gmail.com",
   location: "Cebu, Philippines",
   github: "https://github.com/Xenon293",
+  instagram: "https://www.instagram.com/im_nothaniel/",
   socialImage: "/haniel-molejon.jpg",
   resumePath: null,
   consentStorageKey: "haniel-cookie-consent",

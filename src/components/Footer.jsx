@@ -1,19 +1,20 @@
 import { siteConfig } from "../config/site";
-import { HOME_SECTIONS, ROUTES, homeSectionPath } from "../config/routes";
+import { ROUTES } from "../config/routes";
+import { LineIcon } from "./LineIcon";
 
 const exploreLinks = [
-  ["Projects", homeSectionPath(HOME_SECTIONS.work)],
-  ["About", homeSectionPath(HOME_SECTIONS.about)],
-  ["Ask Buddy", ROUTES.buddy.path],
-  ["Contact", homeSectionPath(HOME_SECTIONS.contact)],
+  ["Projects", ROUTES.projects.path],
+  ["About", ROUTES.about.path],
+  ["Resources", ROUTES.resources.path],
+  ["Contact", ROUTES.contact.path],
 ];
 
-export function Footer() {
+export function Footer({ onPrivacyOpen }) {
   return (
     <footer className="site-footer">
       <div className="site-footer__grid">
         <div className="site-footer__identity">
-          <a className="site-footer__name" href="/" aria-label={`${siteConfig.name} home`}>{siteConfig.name}</a>
+          <a className="site-footer__name" href={ROUTES.home.path} aria-label={`${siteConfig.name} home`}>{siteConfig.name}</a>
           <p>IT student in Cebu building useful projects with Python, automation, Linux, and cybersecurity foundations.</p>
           <span className="site-footer__availability">Open to internship opportunities</span>
         </div>
@@ -21,18 +22,22 @@ export function Footer() {
           <h2>Explore</h2>
           <ul>{exploreLinks.map(([label, href]) => <li key={label}><a href={href}>{label}</a></li>)}</ul>
         </nav>
+        <nav className="site-footer__group" aria-label="Portfolio utilities">
+          <h2>Utilities</h2>
+          <ul>
+            <li><a href={ROUTES.buddy.path}>Ask Buddy</a></li>
+            <li><a href={ROUTES.typing.path}>Typing Test</a></li>
+          </ul>
+        </nav>
         <div className="site-footer__group">
           <h2>Connect</h2>
           <ul>
             <li><a href={`mailto:${siteConfig.email}`}>Email</a></li>
-            <li><a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a></li>
+            <li><a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub <LineIcon name="arrowUpRight" size={14} /></a></li>
+            <li><a href={siteConfig.instagram} target="_blank" rel="noreferrer">Instagram <LineIcon name="arrowUpRight" size={14} /></a></li>
+            <li><a href={ROUTES.privacy.path} onClick={onPrivacyOpen}>Privacy</a></li>
           </ul>
         </div>
-        <nav className="site-footer__group" aria-label="Policies and privacy controls">
-          <h2>Privacy</h2>
-          <ul><li><a href={ROUTES.privacy.path}>Privacy &amp; Cookie Policy</a></li></ul>
-          <p className="site-footer__privacy-note">Optional presence is used only after consent.</p>
-        </nav>
       </div>
       <div className="site-footer__bottom">
         <span>© {new Date().getFullYear()} {siteConfig.name}</span>

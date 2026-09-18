@@ -2,9 +2,14 @@ import { createContext, createElement, useCallback, useContext, useEffect, useMe
 import { siteConfig } from "../config/site";
 
 const PrivacyChoiceContext = createContext(null);
+const VALID_CONSENT = new Set(["accepted", "rejected"]);
+
+function normalizeConsent(value) {
+  return VALID_CONSENT.has(value) ? value : null;
+}
 
 function readConsent() {
-  return window.localStorage.getItem(siteConfig.consentStorageKey);
+  return normalizeConsent(window.localStorage.getItem(siteConfig.consentStorageKey));
 }
 
 export function getOptionalConsent() {
@@ -16,19 +21,22 @@ export function PrivacyChoiceProvider({ children }) {
 
   useEffect(() => {
     const syncAcrossTabs = (event) => {
-      if (event.key === siteConfig.consentStorageKey) setConsent(event.newValue);
+      if (event.key === siteConfig.consentStorageKey) setConsent(normalizeConsent(event.newValue));
     };
     window.addEventListener("storage", syncAcrossTabs);
     return () => window.removeEventListener("storage", syncAcrossTabs);
   }, []);
 
   const decide = useCallback((value) => {
+    const nextValue = normalizeConsent(value);
     if (value === null) {
       window.localStorage.removeItem(siteConfig.consentStorageKey);
+    } else if (nextValue) {
+      window.localStorage.setItem(siteConfig.consentStorageKey, nextValue);
     } else {
-      window.localStorage.setItem(siteConfig.consentStorageKey, value);
+      return;
     }
-    setConsent(value);
+    setConsent(nextValue);
   }, []);
 
   const value = useMemo(() => ({

@@ -1,33 +1,35 @@
-import { useState, useEffect, useRef } from "react";
-import { ROUTES, homeSectionPath, normalizePathname } from "../config/routes";
+import { useEffect, useRef, useState } from "react";
+import { ROUTES, normalizePathname } from "../config/routes";
+import { siteConfig } from "../config/site";
+import { LineIcon } from "./LineIcon";
 
-const links = [
-  { label: "About", href: "#about", icon: "↳" },
-  { label: "Work", href: "#work", icon: "▣" },
-  { label: "Focus", href: "#focus", icon: "⌁" },
-  { label: "Resources", href: "#resources", icon: "✦" },
-  { label: "Contact", href: "#contact", icon: "✉" },
+const primaryLinks = [
+  { label: "Projects", href: ROUTES.projects.path, icon: "projects" },
+  { label: "About", href: ROUTES.about.path, icon: "about" },
+  { label: "Resources", href: ROUTES.resources.path, icon: "resources" },
+  { label: "Contact", href: ROUTES.contact.path, icon: "contact" },
+];
+
+const utilityLinks = [
+  { label: "Ask Buddy", href: ROUTES.buddy.path, icon: "buddy" },
+  { label: "Typing Test", href: ROUTES.typing.path, icon: "typing" },
 ];
 
 export function Nav() {
-  const isSubpage = normalizePathname(window.location.pathname) !== ROUTES.home.path;
+  const currentPath = normalizePathname(window.location.pathname);
+  const isSubpage = currentPath !== ROUTES.home.path;
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const navRef = useRef(null);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
-    if (saved) return saved === "dark";
+    if (saved === "dark" || saved === "light") return saved === "dark";
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   });
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (open) {
-      document.body.classList.add("menu-open");
-      navRef.current?.querySelector("a, button")?.focus();
-    } else {
-      document.body.classList.remove("menu-open");
-    }
+    document.body.classList.toggle("menu-open", open);
+    if (open) navRef.current?.querySelector("a, button")?.focus();
     return () => document.body.classList.remove("menu-open");
   }, [open]);
 
@@ -50,10 +52,9 @@ export function Nav() {
     return () => window.removeEventListener("keydown", trapFocus);
   }, [open]);
 
-  // Close menu on Escape key
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape" && open) {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape" && open) {
         setOpen(false);
         menuButtonRef.current?.focus();
       }
@@ -62,37 +63,18 @@ export function Nav() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  const playTone = () => {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(620, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(980, ctx.currentTime + 0.12);
-
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.035, ctx.currentTime + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
-
-      osc.connect(gain).connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.17);
-    } catch {
-      // Audio context might be restricted in some environments
+  const isActive = (href) => {
+    if (href === ROUTES.projects.path) {
+      return currentPath === href || currentPath.startsWith(ROUTES.project.pathPrefix) || currentPath.startsWith("/work/");
     }
+    return currentPath === href;
   };
 
-  const toggle = (e) => {
-    playTone();
+  const toggleTheme = (event) => {
     const next = !dark;
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = event.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-
     const applyTheme = () => {
       setDark(next);
       document.documentElement.dataset.theme = next ? "dark" : "light";
@@ -101,56 +83,36 @@ export function Nav() {
 
     if (document.startViewTransition) {
       const transition = document.startViewTransition(applyTheme);
-      transition.ready
-        .then(() => {
-          const radius = Math.hypot(
-            Math.max(x, window.innerWidth - x),
-            Math.max(y, window.innerHeight - y),
-          );
-          document.documentElement.animate(
-            {
-              clipPath: [
-                `circle(0px at ${x}px ${y}px)`,
-                `circle(${radius}px at ${x}px ${y}px)`,
-              ],
-            },
-            {
-              duration: 540,
-              easing: "cubic-bezier(.32,.08,.24,1)",
-              pseudoElement: "::view-transition-new(root)",
-            },
-          );
-        })
-        .catch(() => {});
+      transition.ready.then(() => {
+        const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+        document.documentElement.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+          { duration: 540, easing: "cubic-bezier(.32,.08,.24,1)", pseudoElement: "::view-transition-new(root)" },
+        );
+      }).catch(() => {});
     } else {
-      document.documentElement.classList.add(
-        "theme-swoosh",
-        next ? "to-dark" : "to-light",
-      );
-      setTimeout(applyTheme, 80);
-      setTimeout(
-        () =>
-          document.documentElement.classList.remove(
-            "theme-swoosh",
-            "to-dark",
-            "to-light",
-          ),
-        620,
-      );
+      applyTheme();
     }
   };
+
+  const renderLinks = (links) => links.map((link) => (
+    <a
+      aria-current={isActive(link.href) ? "page" : undefined}
+      href={link.href}
+      key={link.href}
+      onClick={() => setOpen(false)}
+    >
+      <LineIcon name={link.icon} size={17} />
+      <span>{link.label}</span>
+    </a>
+  ));
 
   return (
     <>
       <header className="site-header">
-        <a
-          className="wordmark"
-          href={isSubpage ? "/" : "#top"}
-          aria-label={isSubpage ? "HM. — Haniel Molejon, portfolio home" : "HM. — Haniel Molejon, back to top"}
-        >
+        <a className="wordmark" href={ROUTES.home.path} aria-label={isSubpage ? "Haniel Molejon, portfolio home" : "Haniel Molejon, back to top"}>
           HM<span>.</span>
         </a>
-
         <div className="nav-actions">
           <button
             ref={menuButtonRef}
@@ -158,80 +120,41 @@ export function Nav() {
             aria-expanded={open}
             aria-controls="site-nav"
             aria-label={open ? "Close navigation menu" : "Open navigation menu"}
-            onClick={() => setOpen(!open)}
+            onClick={() => setOpen((value) => !value)}
           >
             {open ? "Close" : "Menu"}
           </button>
         </div>
 
-        <nav
-          ref={navRef}
-          id="site-nav"
-          className={`site-nav ${open ? "is-open" : ""}`}
-          aria-label="Primary navigation"
-        >
+        <nav ref={navRef} id="site-nav" className={`site-nav ${open ? "is-open" : ""}`} aria-label="Primary navigation">
           <div className="nav-group">
             <span className="nav-group-label">Explore</span>
-            {links.map((link) => (
-              <a
-                key={link.href}
-                href={homeSectionPath(link.href.slice(1), isSubpage)}
-                onClick={() => setOpen(false)}
-              >
-                <span className="nav-icon" aria-hidden="true">
-                  {link.icon}
-                </span>
-                {link.label}
-              </a>
-            ))}
+            {renderLinks(primaryLinks)}
           </div>
-
+          <div className="nav-group nav-secondary">
+            <span className="nav-group-label">Utilities</span>
+            {renderLinks(utilityLinks)}
+          </div>
           <div className="nav-group nav-secondary">
             <span className="nav-group-label">Elsewhere</span>
-            <a href={ROUTES.buddy.path} onClick={() => setOpen(false)}>
-              <span className="nav-icon" aria-hidden="true">?</span>
-              Ask Buddy
+            <a href="https://github.com/Xenon293" target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+              <LineIcon name="github" size={17} /><span>GitHub</span>
             </a>
-            <a
-              href="https://github.com/Xenon293"
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => setOpen(false)}
-            >
-              <span className="nav-icon">↗</span>
-              GitHub
+            <a href={siteConfig.instagram} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+              <LineIcon name="instagram" size={17} /><span>Instagram</span>
             </a>
-            <a
-              href="mailto:hanielvantecil@gmail.com"
-              onClick={() => setOpen(false)}
-            >
-              <span className="nav-icon">@</span>
-              Email
+            <a href="mailto:hanielvantecil@gmail.com" onClick={() => setOpen(false)}>
+              <LineIcon name="contact" size={17} /><span>Email</span>
             </a>
           </div>
-
-          <div className="nav-notes">
-            <span>Student portfolio</span>
-            <span>Learning in public</span>
-          </div>
-
-          <button
-            type="button"
-            className="theme-toggle"
-            onClick={toggle}
-            aria-label={`Switch to ${dark ? "light" : "dark"} theme`}
-          >
-            {dark ? "☼  Light theme" : "☾  Dark theme"}
+          <div className="nav-notes"><span>Student portfolio</span><span>Learning in public</span></div>
+          <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${dark ? "light" : "dark"} theme`}>
+            <LineIcon name={dark ? "sun" : "moon"} size={16} />
+            <span>{dark ? "Light theme" : "Dark theme"}</span>
           </button>
         </nav>
       </header>
-
-      {/* Backdrop for closing mobile navigation drawer */}
-      <div
-        className={`nav-backdrop ${open ? "is-open" : ""}`}
-        onClick={() => setOpen(false)}
-        aria-hidden="true"
-      />
+      <div className={`nav-backdrop ${open ? "is-open" : ""}`} onClick={() => setOpen(false)} aria-hidden="true" />
     </>
   );
 }

@@ -1,3 +1,5 @@
+import { LineIcon } from "./LineIcon";
+
 export function ProjectDetail({ project }) {
   return (
     <article className="project-case-study">
@@ -27,8 +29,8 @@ export function ProjectDetail({ project }) {
       </div>
 
       {(project.repository || project.demo) && <div className="case-study-links">
-        {project.repository && <a className="hero-primary-action" href={project.repository} target="_blank" rel="noreferrer">View repository ↗</a>}
-        {project.demo && <a className="hero-secondary-action" href={project.demo} target="_blank" rel="noreferrer">View demo ↗</a>}
+        {project.repository && <a className="hero-primary-action" href={project.repository} target="_blank" rel="noreferrer">View repository <LineIcon name="arrowUpRight" size={15} /></a>}
+        {project.demo && <a className="hero-secondary-action" href={project.demo} target="_blank" rel="noreferrer">View demo <LineIcon name="arrowUpRight" size={15} /></a>}
       </div>}
     </article>
   );

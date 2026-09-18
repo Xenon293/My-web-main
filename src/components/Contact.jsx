@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Reveal } from "./Reveal";
+import { LineIcon } from "./LineIcon";
+import { siteConfig } from "../config/site";
 
 const EMAIL = "hanielvantecil@gmail.com";
 
@@ -33,12 +35,12 @@ export function Contact() {
       <div className="contact-inner">
         <div className="contact-left">
           <Reveal>
-            <span className="eyebrow">05 / Contact</span>
-            <h2 id="contact-title">
+            <span className="eyebrow">Contact</span>
+            <h1 id="contact-title" aria-label="Let’s keep in touch.">
               Let&apos;s keep
               <br />
               <em>in touch.</em>
-            </h2>
+            </h1>
           </Reveal>
           <Reveal className="contact-details" delay={100}>
             <p className="contact-lead">
@@ -52,7 +54,7 @@ export function Contact() {
                 href={`mailto:${EMAIL}`}
                 aria-label={`Send email to ${EMAIL}`}
               >
-                {EMAIL} ↗
+                {EMAIL} <LineIcon name="arrowUpRight" size={16} />
               </a>
               <button className="copy-email-button" type="button" onClick={copyEmail}>Copy email</button>
             </div>
@@ -62,15 +64,17 @@ export function Contact() {
             </div>
             <div className="social-links">
               <a
-                href="https://github.com/Xenon293"
+                href={siteConfig.github}
                 target="_blank"
                 rel="noreferrer"
                 className="social-btn"
               >
-                GitHub ↗
+                GitHub <LineIcon name="arrowUpRight" size={16} />
               </a>
               <span className="social-sep">·</span>
-              <span className="social-tag">LinkedIn coming soon</span>
+              <a href={siteConfig.instagram} target="_blank" rel="noreferrer" className="social-btn">
+                Instagram <LineIcon name="arrowUpRight" size={16} />
+              </a>
             </div>
           </Reveal>
         </div>
@@ -129,7 +133,7 @@ export function Contact() {
                   />
                 </div>
                 <button type="submit" className="contact-submit-btn">
-                  Open email draft ↗
+                  Open email draft <LineIcon name="arrowUpRight" size={16} />
                 </button>
                 <p className="form-status" aria-live="polite">{status}</p>
               </form>

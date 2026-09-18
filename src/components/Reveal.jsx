@@ -5,6 +5,7 @@ export function Reveal({
   className = "",
   delay = 0,
   as: Tag = "div",
+  ...props
 }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -32,6 +33,7 @@ export function Reveal({
 
   return (
     <Tag
+      {...props}
       ref={ref}
       className={`reveal ${visible ? "is-visible" : ""} ${className}`}
       style={{ "--reveal-delay": `${delay}ms` }}

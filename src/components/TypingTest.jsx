@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { LineIcon } from "./LineIcon";
 
 const WORD_BANK = [
   "the",
@@ -557,7 +558,8 @@ export function TypingTest() {
               }
               title={isMuted ? "Unmute SFX" : "Mute SFX"}
             >
-              {isMuted ? "🔇 Muted" : "🔊 SFX On"}
+              <LineIcon name={isMuted ? "volumeOff" : "volume"} size={16} />
+              <span>{isMuted ? "Muted" : "SFX On"}</span>
             </button>
           </div>
         </div>
