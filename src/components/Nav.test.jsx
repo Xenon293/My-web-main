@@ -9,6 +9,7 @@ beforeEach(() => {
 
 test("opens, traps initial focus, and closes the mobile menu with Escape", () => {
   render(<Nav />);
+  expect(screen.getByRole("link", { name: "Haniel Molejon, portfolio home" })).toHaveTextContent("HM.");
   const menuButton = screen.getByRole("button", { name: "Open navigation menu" });
   fireEvent.click(menuButton);
   expect(menuButton).toHaveAttribute("aria-expanded", "true");
@@ -18,6 +19,14 @@ test("opens, traps initial focus, and closes the mobile menu with Escape", () =>
   fireEvent.keyDown(window, { key: "Escape" });
   expect(menuButton).toHaveAttribute("aria-expanded", "false");
   expect(menuButton).toHaveFocus();
+});
+
+test("keeps the HM wordmark in the header when the drawer opens", () => {
+  render(<Nav />);
+  fireEvent.click(screen.getByRole("button", { name: "Open navigation menu" }));
+  const wordmark = screen.getByRole("link", { name: "Haniel Molejon, portfolio home" });
+  expect(wordmark).toBeVisible();
+  expect(wordmark).toHaveTextContent("HM.");
 });
 
 test("persists the selected theme", () => {

@@ -15,12 +15,16 @@ const utilityLinks = [
   { label: "Typing Test", href: ROUTES.typing.path, icon: "typing" },
 ];
 
+const MOBILE_NAV_QUERY = "(max-width: 1023px)";
+
 export function Nav() {
   const currentPath = normalizePathname(window.location.pathname);
   const isSubpage = currentPath !== ROUTES.home.path;
   const [open, setOpen] = useState(false);
+  const [mobileNav, setMobileNav] = useState(() => window.matchMedia?.(MOBILE_NAV_QUERY).matches ?? false);
   const menuButtonRef = useRef(null);
   const navRef = useRef(null);
+  const scrollLockRef = useRef(0);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved === "dark" || saved === "light") return saved === "dark";
@@ -28,9 +32,33 @@ export function Nav() {
   });
 
   useEffect(() => {
+    const media = window.matchMedia?.(MOBILE_NAV_QUERY);
+    if (!media) return undefined;
+    const syncViewport = () => {
+      setMobileNav(media.matches);
+      if (!media.matches) setOpen(false);
+    };
+    syncViewport();
+    media.addEventListener("change", syncViewport);
+    return () => media.removeEventListener("change", syncViewport);
+  }, []);
+
+  useEffect(() => {
     document.body.classList.toggle("menu-open", open);
-    if (open) navRef.current?.querySelector("a, button")?.focus();
-    return () => document.body.classList.remove("menu-open");
+    if (!open) {
+      document.body.style.top = "";
+      return () => document.body.classList.remove("menu-open");
+    }
+
+    scrollLockRef.current = window.scrollY;
+    document.body.style.top = `-${scrollLockRef.current}px`;
+    navRef.current?.querySelector("a, button")?.focus();
+
+    return () => {
+      document.body.classList.remove("menu-open");
+      document.body.style.top = "";
+      window.scrollTo(0, scrollLockRef.current);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -126,7 +154,14 @@ export function Nav() {
           </button>
         </div>
 
-        <nav ref={navRef} id="site-nav" className={`site-nav ${open ? "is-open" : ""}`} aria-label="Primary navigation">
+        <nav
+          ref={navRef}
+          id="site-nav"
+          className={`site-nav ${open ? "is-open" : ""}`}
+          aria-label="Primary navigation"
+          aria-hidden={mobileNav && !open ? true : undefined}
+          inert={mobileNav && !open ? true : undefined}
+        >
           <div className="nav-group">
             <span className="nav-group-label">Explore</span>
             {renderLinks(primaryLinks)}

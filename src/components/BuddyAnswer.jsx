@@ -20,6 +20,22 @@ const SAFE_ENTITIES = {
   "&infin;": "∞",
 };
 
+const SAFE_NUMERIC_ENTITY_PATTERN = /&#(?:x([0-9a-f]+)|([0-9]+));/gi;
+
+function decodeSafeNumericEntity(entity, hexadecimal, decimal) {
+  const codePoint = Number.parseInt(hexadecimal || decimal, hexadecimal ? 16 : 10);
+  const isSafe = codePoint === 9 || codePoint === 10 || codePoint === 13
+    || (codePoint >= 32 && codePoint <= 126)
+    || (codePoint >= 0x2000 && codePoint <= 0x22ff)
+    || (codePoint >= 0x27c0 && codePoint <= 0x2aff);
+  if (!isSafe) return entity;
+  try {
+    return String.fromCodePoint(codePoint);
+  } catch {
+    return entity;
+  }
+}
+
 const SAFE_ENTITY_PATTERN = new RegExp(
   Object.keys(SAFE_ENTITIES).map((entity) => entity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"),
   "gi",
@@ -27,6 +43,7 @@ const SAFE_ENTITY_PATTERN = new RegExp(
 
 function normalizeProseAndMath(value) {
   return value
+    .replace(SAFE_NUMERIC_ENTITY_PATTERN, decodeSafeNumericEntity)
     .replace(SAFE_ENTITY_PATTERN, (entity) => SAFE_ENTITIES[entity.toLowerCase()])
     .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, formula) => `$$\n${formula.trim()}\n$$`)
     .replace(/\\\(([\s\S]*?)\\\)/g, (_, formula) => `$${formula.trim()}$`)

@@ -37,6 +37,13 @@ Also: &infin; &times; &divide; &plusmn; &ne;`}
   expect(document.body.textContent).not.toMatch(/\\\(|\\\)|\\\[|\\\]/);
 });
 
+test("decodes safe numeric math entities without exposing entity markup", () => {
+  render(<BuddyAnswer>{"The result is &#x2212;3 and the angle is &#x03B8; = 90&#176;."}</BuddyAnswer>);
+
+  expect(screen.getByText(/The result is/)).toHaveTextContent("The result is −3 and the angle is θ = 90°.");
+  expect(document.body.textContent).not.toMatch(/&#x|&#\d/);
+});
+
 test("renders advanced calculus and matrix notation with KaTeX", () => {
   render(
     <BuddyAnswer>

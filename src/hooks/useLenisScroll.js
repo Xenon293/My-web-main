@@ -5,11 +5,16 @@ export function useLenisScroll() {
   const lenisRef = useRef(null);
 
   useEffect(() => {
-    // Skip in SSR, environments missing ResizeObserver (e.g. jsdom tests), or reduced motion
+    // Skip in SSR, tests, reduced motion, or touch/mobile where native scroll feels better
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches;
+    const narrowViewport = window.matchMedia?.("(max-width: 1023px)").matches;
     if (
       typeof window === "undefined" ||
       typeof ResizeObserver === "undefined" ||
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      prefersReducedMotion ||
+      coarsePointer ||
+      narrowViewport
     ) {
       return undefined;
     }
