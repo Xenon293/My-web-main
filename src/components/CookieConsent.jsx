@@ -29,14 +29,15 @@ export function CookieConsent({ onPrivacyOpen }) {
     }
   }, [open]);
 
-  if (!open) return <button ref={settingsButtonRef} type="button" className="cookie-settings" onClick={() => setOpen(true)}>Privacy settings</button>;
+  if (!open) return <button ref={settingsButtonRef} type="button" className="cookie-settings" onClick={() => setOpen(true)}><span aria-hidden="true">◌</span> Privacy settings</button>;
 
   return (
     <aside className="cookie-consent" role="dialog" aria-modal="false" aria-labelledby="cookie-title" aria-describedby="cookie-description">
       {consent && <button type="button" className="cookie-consent__close" onClick={() => setOpen(false)} aria-label="Close privacy settings">Close</button>}
       <div className="cookie-copy">
+        <span className="cookie-kicker">Privacy choices</span>
         <span className="cookie-label" id="cookie-title">Your privacy matters</span>
-        <p id="cookie-description">This browser remembers your preferences. Optional storage only enables the anonymous visitor count.</p>
+        <p id="cookie-description">Keep site preferences on this device. Optional storage only supports the anonymous visitor count.</p>
         {consent && <span className="cookie-current">Current choice: <strong>{consent === "accepted" ? "Optional accepted" : "Optional rejected"}</strong></span>}
         <a href={ROUTES.privacy.path} onClick={onPrivacyOpen}>Privacy &amp; Cookie Policy</a>
       </div>
