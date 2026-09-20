@@ -372,7 +372,14 @@ h2 {
 }
 
 @media (max-width: 1023px) {
+  #root {
+    padding-top: 64px;
+  }
+
   .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 200;
   }
 
@@ -395,9 +402,9 @@ h2 {
 }
 
 html[data-theme="dark"] .menu-button {
-  background-color: #2a2a27;
-  border-color: #73736c;
-  color: #ffffff;
+  background-color: #f1eee7;
+  border-color: #f1eee7;
+  color: #121212;
 }
 
 /* Mobile Off-Canvas Drawer */
