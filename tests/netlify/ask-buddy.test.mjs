@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import handler from "./ask-buddy.mjs";
+import handler from "../../netlify/functions/ask-buddy.mjs";
 
 const originalKey = process.env.GEMINI_API_KEY;
 const originalUrl = process.env.URL;
