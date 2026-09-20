@@ -387,6 +387,11 @@ h2 {
     z-index: 200;
   }
 
+  .site-header:has(~ .nav-backdrop.is-open) .wordmark {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .menu-button {
     background-color: var(--surface-raised);
     border-color: color-mix(in srgb, var(--ink) 38%, var(--line));
@@ -519,6 +524,22 @@ html[data-theme="dark"] .menu-button {
   font: 500 0.72rem var(--mono);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+@media (max-width: 1023px) {
+  .theme-toggle {
+    background: var(--on-dark);
+    border-color: var(--on-dark);
+    color: var(--dark);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+  }
+
+  .theme-toggle:hover,
+  .theme-toggle:focus-visible {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
 }
 
 .theme-toggle:hover {
