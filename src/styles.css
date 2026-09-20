@@ -330,7 +330,7 @@ h2 {
 
 .wordmark {
   position: relative;
-  z-index: 130;
+  z-index: 230;
   font-weight: 700;
   font-size: 1.25rem;
   letter-spacing: -0.05em;
@@ -348,7 +348,7 @@ h2 {
 
 .menu-button {
   position: relative;
-  z-index: 130;
+  z-index: 230;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -372,8 +372,16 @@ h2 {
 }
 
 @media (max-width: 1023px) {
+  .site-header {
+    z-index: 200;
+  }
+
+  .site-header:has(~ .nav-backdrop.is-open) {
+    z-index: 200;
+  }
+
   .menu-button {
-    background-color: var(--surface);
+    background-color: var(--surface-raised);
     border-color: color-mix(in srgb, var(--ink) 38%, var(--line));
     color: var(--ink-strong);
     box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 10%, transparent);
@@ -384,6 +392,12 @@ h2 {
     border-color: var(--accent);
     background-color: color-mix(in srgb, var(--accent) 12%, var(--surface));
   }
+}
+
+html[data-theme="dark"] .menu-button {
+  background-color: #2a2a27;
+  border-color: #73736c;
+  color: #ffffff;
 }
 
 /* Mobile Off-Canvas Drawer */
@@ -399,7 +413,7 @@ h2 {
   padding: 72px 24px 28px;
   display: flex;
   flex-direction: column;
-  z-index: 110;
+  z-index: 210;
   box-shadow: 12px 0 40px rgba(0, 0, 0, 0.35);
   transform: translateX(-105%);
   transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -424,7 +438,7 @@ h2 {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.55);
-  z-index: 100;
+  z-index: 190;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
