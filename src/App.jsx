@@ -18,6 +18,7 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const TypingPage = lazy(() => import("./pages/TypingPage"));
+const TrackerPage = lazy(() => import("./pages/TrackerPage"));
 const BuddyAssistant = lazy(() =>
   import("./components/BuddyAssistant").then((module) => ({ default: module.BuddyAssistant })),
 );
@@ -45,6 +46,7 @@ function getRouteContent(route) {
   if (route.id === ROUTES.resources.id) return <ResourcesPage />;
   if (route.id === ROUTES.contact.id) return <ContactPage />;
   if (route.id === ROUTES.typing.id) return <TypingPage />;
+  if (route.id === ROUTES.tracker.id) return <TrackerPage />;
   if (route.id === ROUTES.buddy.id) return <BuddyPage />;
   if (route.id === ROUTES.privacy.id) return <PrivacyPage />;
   return <HomePage />;

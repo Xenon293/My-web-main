@@ -13,6 +13,14 @@ const paths = {
   volumeOff: <><path d="M5 10v4h3l4 3V7l-4 3H5Z" /><path d="m16 10 5 5M21 10l-5 5" /></>,
   arrowRight: <><path d="M5 12h14" /><path d="m14 7 5 5-5 5" /></>,
   arrowUpRight: <><path d="M7 17 17 7" /><path d="M8 7h9v9" /></>,
+  tracker: <><circle cx="12" cy="12" r="8.25" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none" /></>,
+  lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
+  check: <path d="m5 12 5 5L19 7" />,
+  plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
+  minus: <path d="M5 12h14" />,
+  trash: <><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" /></>,
+  signOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
+  star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
 };
 
 export function LineIcon({ name, size = 18, className = "" }) {

@@ -25,13 +25,20 @@ export const ROUTES = Object.freeze({
     id: "buddy", path: "/buddy", title: "Ask Buddy",
     description: "Ask Haniel's portfolio assistant about his work or get help understanding an educational topic.", indexable: true,
   },
+  tracker: {
+    id: "tracker",
+    path: "/tracker",
+    title: "Tracker",
+    description: "Personal gamified habit, daily, and assignment tracker.",
+    indexable: false, // private showcase — excluded from sitemap
+  },
   privacy: {
     id: "privacy", path: "/privacy", title: "Privacy & Cookie Policy",
     description: "How this portfolio uses browser storage, optional presence tracking, and third-party services.", indexable: true,
   },
 });
 
-const STATIC_ROUTES = [ROUTES.projects, ROUTES.about, ROUTES.resources, ROUTES.contact, ROUTES.typing, ROUTES.buddy, ROUTES.privacy];
+const STATIC_ROUTES = [ROUTES.projects, ROUTES.about, ROUTES.resources, ROUTES.contact, ROUTES.typing, ROUTES.buddy, ROUTES.tracker, ROUTES.privacy];
 const LEGACY_WORK_PREFIX = "/work/";
 
 export function normalizePathname(pathname) {

@@ -13,6 +13,7 @@ const primaryLinks = [
 const utilityLinks = [
   { label: "Ask Buddy", href: ROUTES.buddy.path, icon: "buddy" },
   { label: "Typing Test", href: ROUTES.typing.path, icon: "typing" },
+  { label: "Tracker", href: ROUTES.tracker.path, icon: "tracker" },
 ];
 
 const MOBILE_NAV_QUERY = "(max-width: 1023px)";
