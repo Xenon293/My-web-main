@@ -1,10 +1,40 @@
 import { LineIcon } from "../LineIcon";
 
-export function RpgStats({ stats, loading, isOwner }) {
+export function RpgStats({ stats, loading, error, isOwner }) {
   if (loading) {
     return (
+      <section className="tracker-stats" aria-label="Character stats" aria-busy="true">
+        <div className="tracker-stats__head">
+          <div className="tracker-stats__identity">
+            <span className="tracker-skeleton tracker-skeleton--badge" />
+            <div className="tracker-skeleton-stack">
+              <span className="tracker-skeleton tracker-skeleton--title" />
+              <span className="tracker-skeleton tracker-skeleton--sub" />
+            </div>
+          </div>
+          <span className="tracker-skeleton tracker-skeleton--pill" />
+        </div>
+        <div className="tracker-bars">
+          <div className="tracker-bar-group">
+            <span className="tracker-skeleton tracker-skeleton--sub" />
+            <span className="tracker-skeleton tracker-skeleton--bar" />
+          </div>
+          <div className="tracker-bar-group">
+            <span className="tracker-skeleton tracker-skeleton--sub" />
+            <span className="tracker-skeleton tracker-skeleton--bar" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
       <section className="tracker-stats" aria-label="Character stats">
-        <div className="tracker-stats__loading">Loading stats…</div>
+        <div className="tracker-stats__empty">
+          <span className="eyebrow">Character</span>
+          <p>{error}</p>
+        </div>
       </section>
     );
   }

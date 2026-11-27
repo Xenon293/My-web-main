@@ -5,7 +5,7 @@ node_modules/
 dist/
 .netlify/
 
-# Environment variables (keeps your keys safe)
+# Environment variables (keep keys safe)
 .env
 .env.*
 !.env.example

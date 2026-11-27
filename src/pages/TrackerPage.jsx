@@ -44,6 +44,7 @@ export default function TrackerPage() {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [loadingPublic, setLoadingPublic] = useState(true);
+  const [publicError, setPublicError] = useState("");
 
   const [habits, setHabits] = useState([]);
   const [dailies, setDailies] = useState([]);
@@ -70,13 +71,19 @@ export default function TrackerPage() {
       setLoadingPublic(false);
       return;
     }
-    const [nextStats, nextActivity] = await Promise.all([
-      getStats(publicUserId),
-      getActivityLog(publicUserId),
-    ]);
-    setStats(nextStats);
-    setActivity(nextActivity);
-    setLoadingPublic(false);
+    setPublicError("");
+    try {
+      const [nextStats, nextActivity] = await Promise.all([
+        getStats(publicUserId),
+        getActivityLog(publicUserId),
+      ]);
+      setStats(nextStats);
+      setActivity(nextActivity);
+    } catch {
+      setPublicError("Could not load tracker stats right now.");
+    } finally {
+      setLoadingPublic(false);
+    }
   }, [publicUserId]);
 
   const refreshPrivate = useCallback(async () => {
@@ -282,13 +289,33 @@ export default function TrackerPage() {
         </div>
       )}
 
-      <RpgStats stats={stats} loading={loadingPublic} isOwner={isOwner} />
+      {publicError && (
+        <div className="tracker-error-banner" role="alert">
+          <span>{publicError}</span>
+          <button type="button" className="tracker-btn tracker-btn--sm" onClick={refreshPublic}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      <RpgStats stats={stats} loading={loadingPublic} error={publicError} isOwner={isOwner} />
       <TrackerHeatmap activity={activity} loading={loadingPublic} />
 
       {isOwner ? (
         <section className="tracker-workspace" aria-label="Task workspace">
           {loadingPrivate ? (
-            <div className="tracker-workspace__loading">Loading your stuff…</div>
+            <div className="tracker-grid" aria-busy="true" aria-label="Loading workspace">
+              <div className="tracker-panel tracker-panel--skeleton">
+                <span className="tracker-skeleton tracker-skeleton--title" />
+                <span className="tracker-skeleton tracker-skeleton--row" />
+                <span className="tracker-skeleton tracker-skeleton--row" />
+              </div>
+              <div className="tracker-panel tracker-panel--skeleton">
+                <span className="tracker-skeleton tracker-skeleton--title" />
+                <span className="tracker-skeleton tracker-skeleton--row" />
+                <span className="tracker-skeleton tracker-skeleton--row" />
+              </div>
+            </div>
           ) : (
             <div className="tracker-grid">
               <HabitPanel

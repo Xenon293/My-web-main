@@ -485,7 +485,7 @@ html[data-theme="dark"] .menu-button {
   font: 400 0.88rem var(--mono);
   color: rgba(255, 255, 255, 0.9);
   padding: 8px 0;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .site-nav a:hover,
@@ -3818,10 +3818,16 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
    ========================================================================== */
 .tracker-page {
   width: min(100%, 1180px);
+  min-width: 0;
   margin: 0 auto;
-  padding: clamp(64px, 9vw, 110px) 20px clamp(72px, 10vw, 120px);
+  padding: clamp(24px, 5vw, 110px) 16px max(72px, env(safe-area-inset-bottom));
   display: grid;
-  gap: clamp(24px, 4vw, 36px);
+  gap: 16px;
+  overflow-x: hidden;
+}
+
+.tracker-page > * {
+  min-width: 0;
 }
 
 .tracker-header {
@@ -3876,6 +3882,14 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
   background: var(--surface-raised);
 }
 
+.tracker-btn:active:not(:disabled),
+.tracker-icon-btn:active:not(:disabled),
+.tracker-check-btn:active:not(:disabled),
+.tracker-delete-btn:active:not(:disabled),
+.tracker-day-toggle:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .tracker-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -3902,6 +3916,7 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 .tracker-heatmap,
 .tracker-panel,
 .tracker-public-note {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -3920,6 +3935,7 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 .tracker-auth-confirm p {
   color: var(--muted);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .tracker-auth-form {
@@ -3931,12 +3947,14 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 
 .tracker-auth-form .tracker-input {
   flex: 1 1 240px;
+  min-width: 0;
 }
 
 .tracker-auth-error {
   margin-top: 10px;
   color: #c24b3e;
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 
 .tracker-input {
@@ -4033,6 +4051,10 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px;
+}
+
+.tracker-bar-group {
+  min-width: 0;
 }
 
 .tracker-bar-label {
@@ -4239,6 +4261,7 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 .tracker-item__meta {
   font: 400 0.73rem var(--mono);
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .tracker-habit-controls {
@@ -4379,6 +4402,9 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
 
 .tracker-modal {
   width: min(100%, 480px);
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -4452,8 +4478,199 @@ html:not([data-theme="dark"]) .form-group textarea:focus-visible {
   gap: 10px;
 }
 
+.tracker-error-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #c85c4b 55%, var(--line));
+  background: color-mix(in srgb, #c85c4b 10%, var(--surface));
+  color: var(--ink-strong);
+  font-size: 0.88rem;
+}
+
+.tracker-skeleton-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.tracker-skeleton {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-raised) 25%,
+    color-mix(in srgb, var(--line) 55%, var(--surface-raised)) 50%,
+    var(--surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: tracker-shimmer 1.4s ease-in-out infinite;
+}
+
+.tracker-skeleton--badge {
+  width: 56px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.tracker-skeleton--title {
+  width: 120px;
+  height: 20px;
+}
+
+.tracker-skeleton--sub {
+  width: 96px;
+  height: 14px;
+}
+
+.tracker-skeleton--pill {
+  width: 92px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.tracker-skeleton--bar {
+  width: 100%;
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 999px;
+}
+
+.tracker-skeleton--heatmap {
+  width: 100%;
+  height: 108px;
+  border-radius: 10px;
+}
+
+.tracker-panel--skeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.tracker-skeleton--row {
+  width: 100%;
+  height: 54px;
+  border-radius: 10px;
+}
+
+@keyframes tracker-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracker-skeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .tracker-header {
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 18px;
+  }
+
+  .tracker-header__actions {
+    width: 100%;
+  }
+
+  .tracker-header__actions .tracker-btn {
+    min-height: 44px;
+    padding-inline: 18px;
+  }
+
+  .tracker-auth-form {
+    flex-direction: column;
+  }
+
+  .tracker-auth-form .tracker-input,
+  .tracker-auth-form .tracker-btn {
+    width: 100%;
+    flex: none;
+  }
+
+  .tracker-input,
+  .tracker-page input,
+  .tracker-page select,
+  .tracker-page textarea,
+  .tracker-modal input,
+  .tracker-modal select,
+  .tracker-modal textarea {
+    font-size: 1rem;
+    min-height: 44px;
+  }
+
+  .tracker-btn,
+  .tracker-btn--sm,
+  .tracker-day-toggle {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .tracker-icon-btn,
+  .tracker-check-btn,
+  .tracker-delete-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .tracker-habit-controls {
+    gap: 8px;
+  }
+
+  .tracker-bars,
+  .tracker-field-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .tracker-item {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tracker-redeem-btn {
+    flex: 1 1 auto;
+  }
+
+  .tracker-toast {
+    left: 16px;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    max-width: none;
+    text-align: center;
+  }
+
+  .tracker-modal-backdrop {
+    padding: 12px;
+    align-items: end;
+  }
+
+  .tracker-modal {
+    max-height: 90dvh;
+    padding: 20px 16px max(20px, env(safe-area-inset-bottom));
+    gap: 14px;
+  }
+
+  .tracker-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .tracker-modal__actions .tracker-btn {
+    width: 100%;
+  }
+}
+
 @media (min-width: 640px) {
-  .tracker-page { padding-inline: 32px; }
+  .tracker-page {
+    padding: clamp(64px, 9vw, 110px) 32px clamp(72px, 10vw, 120px);
+    gap: clamp(24px, 4vw, 36px);
+  }
 }
 
 @media (min-width: 1024px) {

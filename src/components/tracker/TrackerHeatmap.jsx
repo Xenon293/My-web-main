@@ -70,7 +70,9 @@ export function TrackerHeatmap({ activity, loading }) {
       </div>
 
       {loading ? (
-        <div className="tracker-heatmap__state">Loading heatmap…</div>
+        <div className="tracker-heatmap__skeleton" aria-busy="true" aria-label="Loading heatmap">
+          <span className="tracker-skeleton tracker-skeleton--heatmap" />
+        </div>
       ) : (
         <div className="tracker-calendar-scroll" role="img" aria-label={`${totalActions} tracked actions in the last 52 weeks`}>
           <div className="tracker-calendar" aria-hidden="true">
