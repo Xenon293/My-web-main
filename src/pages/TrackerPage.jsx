@@ -8,6 +8,9 @@ import { RewardsPanel } from "../components/tracker/RewardsPanel";
 import { RpgStats } from "../components/tracker/RpgStats";
 import { TrackerHeatmap } from "../components/tracker/TrackerHeatmap";
 import { TrackerModal } from "../components/tracker/TrackerModal";
+import { TodayPlan } from "../components/tracker/TodayPlan";
+import { WeeklyReview } from "../components/tracker/WeeklyReview";
+import { usePhtClock } from "../hooks/usePhtClock";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import {
@@ -30,12 +33,20 @@ import {
   getStats,
   logHabit,
   redeemReward,
+  applyOverduePenalties,
+  updateAssignmentSubtasks,
+  updateSubtaskTime,
+  getWeeklyEvents,
+  getDismissedReviews,
+  dismissWeeklyReview,
 } from "../services/tracker";
+import { getBestStreak, getWeeklyReview, previousWeekRange } from "../services/trackerLogic";
 
 const OWNER_USER_ID = import.meta.env.VITE_OWNER_USER_ID;
 
 export default function TrackerPage() {
   const session = useAuth();
+  const phtNow = usePhtClock();
   const userId = session?.user?.id;
   const isOwner = Boolean(userId && (!OWNER_USER_ID || userId === OWNER_USER_ID));
   const publicUserId = OWNER_USER_ID || userId;
@@ -55,6 +66,8 @@ export default function TrackerPage() {
   const [modal, setModal] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [toast, setToast] = useState("");
+  const [weeklyReview, setWeeklyReview] = useState(null);
+  const reviewRange = previousWeekRange(phtNow);
 
   const notify = useCallback((message) => {
     setToast(message);
@@ -103,19 +116,25 @@ export default function TrackerPage() {
   const refreshPrivate = useCallback(async () => {
     if (!isOwner || !userId) return;
     setLoadingPrivate(true);
-    await ensureStats(userId);
-    const [h, d, a, r] = await Promise.all([
-      getHabits(userId),
-      getDailies(userId),
-      getAssignments(userId),
-      getRewards(userId),
-    ]);
-    setHabits(h);
-    setDailies(d);
-    setAssignments(a);
-    setRewards(r);
-    setLoadingPrivate(false);
-  }, [isOwner, userId]);
+    try {
+      await ensureStats(userId);
+      await applyOverduePenalties(userId);
+      const [h, d, a, r] = await Promise.all([
+        getHabits(userId),
+        getDailies(userId),
+        getAssignments(userId),
+        getRewards(userId),
+      ]);
+      setHabits(h);
+      setDailies(d);
+      setAssignments(a);
+      setRewards(r);
+    } catch {
+      notify("Could not load your private tracker. Check your connection and retry.");
+    } finally {
+      setLoadingPrivate(false);
+    }
+  }, [isOwner, notify, userId]);
 
   useEffect(() => {
     refreshPublic();
@@ -132,6 +151,28 @@ export default function TrackerPage() {
       setRewards([]);
     }
   }, [isOwner, refreshPrivate, refreshPublic]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadReview = async () => {
+      const range = reviewRange;
+      if (!isOwner || !userId || !range.visible) { setWeeklyReview(null); return; }
+      const [events, dismissed] = await Promise.all([
+        getWeeklyEvents(userId, range.startDate, range.endDate),
+        getDismissedReviews(userId),
+      ]);
+      if (cancelled || !events || !dismissed || dismissed.includes(range.startDate)) return;
+      setWeeklyReview({ ...getWeeklyReview(events, range.startDate, range.endDate), bestStreak: getBestStreak(activity, range.startDate, range.endDate), weekStart: range.startDate });
+    };
+    loadReview();
+    return () => { cancelled = true; };
+  }, [activity, isOwner, userId, reviewRange.visible, reviewRange.startDate, reviewRange.endDate]);
+
+  const handleDismissReview = async () => {
+    if (!weeklyReview || !userId) return;
+    setWeeklyReview(null);
+    await dismissWeeklyReview(userId, weeklyReview.weekStart);
+  };
 
   const handleSignOut = async () => {
     if (!supabase) return;
@@ -168,7 +209,8 @@ export default function TrackerPage() {
   const handleCompleteDaily = async (daily) => {
     if (!userId || daily.completed || busyId) return;
     setBusyId(daily.id);
-    await completeDaily(userId, daily);
+    const completed = await completeDaily(userId, daily);
+    if (!completed) { setBusyId(null); notify("Couldn't complete that daily. Check that it is due today and retry."); return; }
     setDailies((prev) => prev.map((d) => (d.id === daily.id ? { ...d, completed: true } : d)));
     await refreshPublic();
     setBusyId(null);
@@ -192,13 +234,12 @@ export default function TrackerPage() {
     if (!userId || assignment.completed || busyId) return;
     setBusyId(assignment.id);
     const result = await completeAssignment(userId, assignment);
-    setAssignments((prev) =>
-      prev.map((a) => (a.id === assignment.id ? { ...a, completed: true } : a)),
-    );
+    if (!result) { setBusyId(null); notify("Couldn't complete that assignment. Please retry."); return; }
+    setAssignments((prev) => prev.map((a) => (a.id === assignment.id ? { ...a, completed: true } : a)));
     await refreshPublic();
     setBusyId(null);
     if (result) {
-      notify(result.bonus ? `Turned in early! +${result.xpGain} XP` : `Done! +${result.xpGain} XP`);
+      notify(result.late ? `Completed late · +${result.xpGain} XP` : result.bonus ? `Turned in early! +${result.xpGain} XP` : `Done! +${result.xpGain} XP`);
     }
   };
 
@@ -214,6 +255,26 @@ export default function TrackerPage() {
     const created = await createAssignment(userId, payload);
     if (created) setAssignments((prev) => [...prev, created]);
   };
+
+  const saveAssignment = async (assignment, transform) => {
+    if (!userId || busyId) return;
+    setBusyId(assignment.id);
+    try {
+      const saved = await transform(assignment);
+      if (saved) setAssignments((items) => items.map((item) => item.id === assignment.id ? saved : item));
+      else notify("Couldn't save that change. Please retry.");
+    } catch {
+      notify("Couldn't save that change. Check your connection and retry.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleToggleSubtask = (assignment, subtask) => saveAssignment(assignment, (item) => updateAssignmentSubtasks(item, item.subtasks.map((entry) => entry.id === subtask.id ? { ...entry, completed: !entry.completed } : entry)));
+  const handleDeleteSubtask = (assignment, subtask) => saveAssignment(assignment, (item) => updateAssignmentSubtasks(item, item.subtasks.filter((entry) => entry.id !== subtask.id)));
+  const handleSubtaskTime = (assignment, subtask, field, value) => saveAssignment(assignment, (item) => updateSubtaskTime(item, subtask.id, field, value));
+
+  const handleTodayComplete = (item, isDaily) => isDaily ? handleCompleteDaily(item) : handleCompleteAssignment(item);
 
   const handleCreateReward = async (payload) => {
     if (!userId) return;
@@ -250,6 +311,7 @@ export default function TrackerPage() {
     setBusyId(null);
 
     if (result?.ok) {
+      setRewards((items) => items.map((item) => item.id === reward.id ? { ...item, redeemed_count: result.redeemed_count } : item));
       notify(`Treated yourself to "${reward.title}" (-${reward.cost}g)`);
     } else {
       await refreshPrivate();
@@ -314,6 +376,7 @@ export default function TrackerPage() {
 
       <RpgStats stats={stats} loading={loadingPublic} error={publicError} isOwner={isOwner} />
       <TrackerHeatmap activity={activity} loading={loadingPublic} error={publicError} />
+      {isOwner && <WeeklyReview review={weeklyReview} onDismiss={handleDismissReview} />}
 
       {isOwner ? (
         <section className="tracker-workspace" aria-label="Task workspace">
@@ -331,6 +394,8 @@ export default function TrackerPage() {
               </div>
             </div>
           ) : (
+            <>
+            <TodayPlan assignments={assignments} dailies={dailies} onCompleteAssignment={(item) => handleTodayComplete(item, false)} onCompleteDaily={(item) => handleTodayComplete(item, true)} />
             <div className="tracker-grid">
               <HabitPanel
                 habits={habits}
@@ -351,6 +416,10 @@ export default function TrackerPage() {
                 onComplete={handleCompleteAssignment}
                 onAdd={() => setModal("assignment")}
                 onDelete={handleDeleteAssignment}
+                onToggleSubtask={handleToggleSubtask}
+                onDeleteSubtask={handleDeleteSubtask}
+                onUpdateSubtaskTime={handleSubtaskTime}
+                onAddSubtask={(assignment, title) => saveAssignment(assignment, (item) => updateAssignmentSubtasks(item, [...item.subtasks, { id: globalThis.crypto?.randomUUID?.() || `${Date.now()}`, title, completed: false, start_time: "", end_time: "" }]))}
                 busyId={busyId}
               />
               <RewardsPanel
@@ -362,6 +431,7 @@ export default function TrackerPage() {
                 busyId={busyId}
               />
             </div>
+            </>
           )}
         </section>
       ) : (

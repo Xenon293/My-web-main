@@ -1,18 +1,12 @@
 import { LineIcon } from "../LineIcon";
+import { phtWeekday } from "../../services/trackerLogic";
+import { usePhtClock } from "../../hooks/usePhtClock";
 
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-const WEEKDAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-
-function todayDowPHT() {
-  const short = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Manila",
-    weekday: "short",
-  }).format(new Date());
-  return WEEKDAY_MAP[short] ?? new Date().getDay();
-}
 
 export function DailiesPanel({ dailies, onComplete, onAdd, onDelete, busyId }) {
-  const todayDow = todayDowPHT();
+  const now = usePhtClock();
+  const todayDow = phtWeekday(now);
 
   const sorted = [...dailies].sort((a, b) => {
     const aDue = a.days_of_week?.includes(todayDow) ? 0 : 1;
@@ -51,7 +45,7 @@ export function DailiesPanel({ dailies, onComplete, onAdd, onDelete, busyId }) {
                   type="button"
                   className={`tracker-check-btn ${daily.completed ? "is-checked" : ""}`}
                   onClick={() => onComplete(daily)}
-                  disabled={daily.completed || busy}
+                  disabled={daily.completed || !dueToday || busy}
                   aria-label={daily.completed ? `${daily.title} completed` : `Complete ${daily.title}`}
                 >
                   {daily.completed && <LineIcon name="check" size={13} />}

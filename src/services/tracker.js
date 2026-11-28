@@ -1,4 +1,7 @@
 import { supabase } from "../lib/supabase";
+import { getLateXp, normalizeAssignment, phtDateKey, phtWeekday } from "./trackerLogic";
+
+const newSubtaskId = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -6,7 +9,7 @@ import { supabase } from "../lib/supabase";
 
 /** Today's date string in Asia/Manila time — "YYYY-MM-DD" */
 function todayPHT() {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  return phtDateKey();
 }
 
 /** Compute level/xp after gaining `gained` XP. xp_to_next scales as level*100. */
@@ -106,15 +109,21 @@ async function _incrementActivity(userId) {
     .upsert({ user_id: userId, date, count: newCount }, { onConflict: "user_id,date" });
 }
 
+async function _recordEvent(userId, { type, xp_delta = 0, hp_delta = 0 }) {
+  if (!supabase) return;
+  const { error } = await supabase.from("tracker_events").insert({ user_id: userId, date: todayPHT(), type, xp_delta, hp_delta });
+  if (error) console.error("recordTrackerEvent:", error.message);
+}
+
 /**
  * Fetch the last 52 weeks of activity for the public heatmap.
  * Returns an array of { date: "YYYY-MM-DD", count: number }.
  */
 export async function getActivityLog(ownerUserId, { throwOnError = false } = {}) {
   if (!supabase || !ownerUserId) return [];
-  const since = new Date();
-  since.setDate(since.getDate() - 364);
-  const sinceStr = since.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  const since = new Date(`${todayPHT()}T00:00:00Z`);
+  since.setUTCDate(since.getUTCDate() - 364);
+  const sinceStr = since.toISOString().slice(0, 10);
 
   const { data, error } = await supabase
     .from("activity_log")
@@ -181,8 +190,10 @@ export async function logHabit(userId, habit, direction) {
   if (direction === "positive") {
     await _addXp(userId, habit.xp_reward);
     await _addGold(userId, habit.gold_drop);
+    await _recordEvent(userId, { type: "habit_completed", xp_delta: habit.xp_reward });
   } else {
     await _addHp(userId, -habit.hp_cost);
+    await _recordEvent(userId, { type: "habit_penalty", hp_delta: -habit.hp_cost });
   }
 
   // 3. Increment today's heatmap count
@@ -208,7 +219,7 @@ export async function createDaily(userId, { title, days_of_week = [1, 2, 3, 4, 5
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("dailies")
-    .insert({ user_id: userId, title, days_of_week, xp_reward, hp_penalty })
+    .insert({ user_id: userId, title, days_of_week, xp_reward, hp_penalty, schema_version: 2 })
     .select()
     .single();
   if (error) { console.error("createDaily:", error.message); return null; }
@@ -216,10 +227,10 @@ export async function createDaily(userId, { title, days_of_week = [1, 2, 3, 4, 5
 }
 
 export async function completeDaily(userId, daily) {
-  if (!supabase || daily.completed) return;
-  await supabase.from("dailies").update({ completed: true }).eq("id", daily.id);
-  await _addXp(userId, daily.xp_reward);
-  await _incrementActivity(userId);
+  if (!supabase || daily.completed || !(daily.days_of_week ?? []).includes(phtWeekday())) return false;
+  const { data, error } = await supabase.rpc("complete_tracker_daily", { daily_id: daily.id });
+  if (error) { console.error("completeDaily:", error.message); return false; }
+  return Boolean(data?.ok);
 }
 
 export async function deleteDaily(id) {
@@ -239,36 +250,47 @@ export async function getAssignments(userId) {
     .eq("user_id", userId)
     .order("due_date", { ascending: true, nullsFirst: false });
   if (error) { console.error("getAssignments:", error.message); return []; }
-  return data ?? [];
+  return (data ?? []).map(normalizeAssignment);
 }
 
-export async function createAssignment(userId, { title, subject = "", priority = "medium", due_date = null, xp_reward = 50, bonus_xp = 25, hp_penalty = 20 }) {
+export async function createAssignment(userId, { title, subject = "", priority = "medium", due_date = null, xp_reward = 50, bonus_xp = 25, hp_penalty = 20, subtasks = [], start_time = "", end_time = "" }) {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("assignments")
-    .insert({ user_id: userId, title, subject: subject || null, priority, due_date: due_date || null, xp_reward, bonus_xp, hp_penalty })
+    .insert({ user_id: userId, title, subject: subject || null, priority, due_date: due_date || null, xp_reward, bonus_xp, hp_penalty, subtasks: subtasks.map((item) => ({ ...item, id: item.id || newSubtaskId(), completed: false, start_time: item.start_time || "", end_time: item.end_time || "" })), start_time: start_time || null, end_time: end_time || null, schema_version: 2 })
     .select()
     .single();
   if (error) { console.error("createAssignment:", error.message); return null; }
-  return data;
+  return normalizeAssignment(data);
+}
+
+export async function updateAssignmentSubtasks(assignment, subtasks) {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from("assignments").update({ subtasks, schema_version: 2 }).eq("id", assignment.id).select().single();
+  if (error) { console.error("updateAssignmentSubtasks:", error.message); return null; }
+  return normalizeAssignment(data);
+}
+
+export async function updateSubtaskTime(assignment, subtaskId, field, value) {
+  if (!["start_time", "end_time"].includes(field)) return null;
+  const subtasks = assignment.subtasks.map((item) => item.id === subtaskId ? { ...item, [field]: value } : item);
+  return updateAssignmentSubtasks(assignment, subtasks);
+}
+
+export async function applyOverduePenalties(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.rpc("apply_overdue_assignment_penalties", { owner_id: userId });
+  if (error) { console.error("applyOverduePenalties:", error.message); return []; }
+  return data ?? [];
 }
 
 export async function completeAssignment(userId, assignment) {
   if (!supabase || assignment.completed) return;
-  const now = new Date().toISOString();
-  await supabase
-    .from("assignments")
-    .update({ completed: true, completed_at: now })
-    .eq("id", assignment.id);
-
-  // Award XP: base + bonus if completed before due_date
-  const today = todayPHT();
-  const isEarly = assignment.due_date && today <= assignment.due_date;
-  const xpGain = assignment.xp_reward + (isEarly ? assignment.bonus_xp : 0);
-  await _addXp(userId, xpGain);
-  await _incrementActivity(userId);
-
-  return { xpGain, bonus: isEarly };
+  const { data, error } = await supabase.rpc("complete_tracker_assignment", { assignment_id: assignment.id });
+  if (error) { console.error("completeAssignment:", error.message); return null; }
+  if (!data?.ok) return null;
+  const { xpGain, late } = getLateXp(assignment);
+  return { xpGain: data.xp_gain ?? xpGain, bonus: Boolean(assignment.due_date && todayPHT() < assignment.due_date), late };
 }
 
 export async function deleteAssignment(id) {
@@ -309,25 +331,28 @@ export async function deleteReward(rewardId) {
 
 export async function redeemReward(userId, reward) {
   if (!supabase || !userId || !reward) return { ok: false, reason: "unavailable" };
+  const { data, error } = await supabase.rpc("redeem_tracker_reward", { reward_id: reward.id });
+  if (error) { console.error("redeemReward:", error.message); return { ok: false, reason: "update_failed" }; }
+  return data?.ok ? { ok: true, redeemed_count: data.redeemed_count } : { ok: false, reason: data?.reason || "insufficient_gold" };
+}
 
-  const current = await getStats(userId);
-  if (!current || current.gold < reward.cost) {
-    return { ok: false, reason: "insufficient_gold" };
-  }
+export async function getWeeklyEvents(userId, startDate, endDate) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from("tracker_events").select("date,type,xp_delta,hp_delta,streak").eq("user_id", userId).gte("date", startDate).lte("date", endDate);
+  if (error) { console.error("getWeeklyEvents:", error.message); return null; }
+  return data ?? [];
+}
 
-  await _addGold(userId, -reward.cost);
+export async function dismissWeeklyReview(userId, weekStart) {
+  if (!supabase || !userId) return false;
+  const { error } = await supabase.from("tracker_review_dismissals").upsert({ user_id: userId, week_start: weekStart }, { onConflict: "user_id,week_start" });
+  if (error) { console.error("dismissWeeklyReview:", error.message); return false; }
+  return true;
+}
 
-  const nextCount = (reward.redeemed_count ?? 0) + 1;
-  const { error } = await supabase
-    .from("rewards")
-    .update({ redeemed_count: nextCount })
-    .eq("id", reward.id);
-
-  if (error) {
-    console.error("redeemReward:", error.message);
-    return { ok: false, reason: "update_failed" };
-  }
-
-  await _incrementActivity(userId);
-  return { ok: true, redeemed_count: nextCount };
+export async function getDismissedReviews(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase.from("tracker_review_dismissals").select("week_start").eq("user_id", userId);
+  if (error) { console.error("getDismissedReviews:", error.message); return null; }
+  return (data ?? []).map((row) => row.week_start);
 }

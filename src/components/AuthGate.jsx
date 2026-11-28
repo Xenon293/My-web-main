@@ -1,74 +1,84 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../hooks/useAuth";
+import { siteConfig } from "../config/site";
 
-/**
- * AuthGate — wraps the private (editable) portion of the Tracker page.
- *
- * Public visitors never see this component rendered; instead, TrackerPage
- * renders the read-only public showcase and mounts AuthGate only for the
- * hidden admin panel.  AuthGate itself only shows the sign-in form when
- * the user navigates to /tracker/login or when the subtle "Admin" button
- * is clicked.
- *
- * Props:
- *   children  — the full interactive workspace (passed session + userId)
- *   onSession — optional callback(session) called when session resolves
- */
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export function AuthGate({ children, onSession }) {
   const session = useAuth();
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [sentTo, setSentTo] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
-  // Notify parent of resolved session (so TrackerPage can unlock panels)
-  if (onSession && session !== undefined) {
-    onSession(session);
-  }
+  useEffect(() => {
+    if (!cooldownUntil) return undefined;
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setCooldownSeconds(remaining);
+      if (remaining === 0) setCooldownUntil(0);
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldownUntil]);
 
-  // Still resolving — render nothing (parent shows public content already)
+  if (onSession && session !== undefined) onSession(session);
   if (session === undefined) return null;
+  if (session) return children(session);
 
-  // Active session — render the private workspace
-  if (session) {
-    return children(session);
-  }
-
-  // No session — render the minimal magic-link form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
+    const normalizedEmail = email.trim();
+    if (cooldownSeconds > 0) return;
     if (!supabase) {
       setError("Supabase is not configured. Check your .env file and restart the dev server.");
       return;
     }
+
     setLoading(true);
     try {
       const { error: authError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          // Redirect back to /tracker after clicking the magic link
-          emailRedirectTo: `${window.location.origin}/tracker`,
-        },
+        email: normalizedEmail,
+        options: { emailRedirectTo: `${siteConfig.siteUrl.replace(/\/$/, "")}/tracker` },
       });
       if (authError) {
-        setError(authError.message);
+        const message = authError.message || "Could not send the sign-in link. Please try again.";
+        setError(/rate.?limit|too many requests/i.test(message)
+          ? `Email rate limit reached. Please wait before trying again. ${message}`
+          : message);
       } else {
-        setSent(true);
+        setSentTo(normalizedEmail);
+        setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
+        setCooldownUntil(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send magic link.");
+      const message = err instanceof Error ? err.message : "Failed to send magic link.";
+      setError(/rate.?limit|too many requests/i.test(message)
+        ? `Email rate limit reached. Please wait before trying again. ${message}`
+        : message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (sent) {
+  if (sentTo) {
     return (
       <div className="tracker-auth-confirm">
         <span className="eyebrow">Admin access</span>
-        <p>Magic link sent — check your email and click the link to continue.</p>
+        <p>Magic link sent to <strong>{sentTo}</strong>. Check your email and click the link to continue.</p>
+        <button
+          type="button"
+          className="tracker-btn tracker-btn--primary"
+          onClick={() => { setEmail(sentTo); setSentTo(""); setError(""); }}
+          disabled={cooldownSeconds > 0 || loading}
+        >
+          {cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : "Resend magic link"}
+        </button>
       </div>
     );
   }
@@ -82,7 +92,7 @@ export function AuthGate({ children, onSession }) {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(event) => setEmail(event.target.value)}
           placeholder="your@email.com"
           className="tracker-input"
           autoComplete="email"
@@ -92,12 +102,12 @@ export function AuthGate({ children, onSession }) {
         <button
           type="submit"
           className="tracker-btn tracker-btn--primary"
-          disabled={loading || !email.trim()}
+          disabled={loading || cooldownSeconds > 0 || !email.trim()}
         >
-          {loading ? "Sending…" : "Send magic link"}
+          {loading ? "Sending…" : cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : "Send magic link"}
         </button>
       </form>
-      {error && <p className="tracker-auth-error">{error}</p>}
+      {error && <p className="tracker-auth-error" role="alert">{error}</p>}
     </div>
   );
 }

@@ -32,6 +32,10 @@ export function TrackerModal({
   const [dueDate, setDueDate] = useState("");
   const [bonusXp, setBonusXp] = useState(25);
   const [cost, setCost] = useState(25);
+  const [subtaskTitle, setSubtaskTitle] = useState("");
+  const [subtasks, setSubtasks] = useState([]);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,6 +44,9 @@ export function TrackerModal({
     setTitle("");
     setSubject("");
     setDueDate("");
+    setSubtasks([]);
+    setStartTime("");
+    setEndTime("");
     setSubmitting(false);
 
     if (type === "habit") {
@@ -110,6 +117,9 @@ export function TrackerModal({
         xp_reward: Number(xpReward) || 50,
         bonus_xp: Number(bonusXp) || 25,
         hp_penalty: Number(hpPenalty) || 20,
+        subtasks,
+        start_time: startTime,
+        end_time: endTime,
       });
     } else if (type === "reward") {
       await onCreateReward({
@@ -227,6 +237,21 @@ export function TrackerModal({
 
           {type === "assignment" && (
             <>
+              <div className="tracker-field">
+                <span>Task time (optional)</span>
+                <div className="tracker-field-row">
+                  <label className="tracker-field"><span>Start</span><input aria-label="Start time" type="time" className="tracker-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></label>
+                  <label className="tracker-field"><span>End</span><input aria-label="End time" type="time" className="tracker-input" value={endTime} onChange={(e) => setEndTime(e.target.value)} /></label>
+                </div>
+              </div>
+              <label className="tracker-field">
+                <span>Subtasks (optional)</span>
+                <div className="tracker-field-row">
+                  <input className="tracker-input" value={subtaskTitle} onChange={(e) => setSubtaskTitle(e.target.value)} placeholder="e.g., Read chapters 1–2" />
+                  <button type="button" className="tracker-btn tracker-btn--sm" disabled={!subtaskTitle.trim()} onClick={() => { setSubtasks((items) => [...items, { title: subtaskTitle.trim(), completed: false }]); setSubtaskTitle(""); }}>Add subtask</button>
+                </div>
+                {subtasks.length > 0 && <ul className="tracker-subtask-draft">{subtasks.map((item, index) => <li key={`${item.title}-${index}`}>{item.title}<button type="button" className="tracker-delete-btn" aria-label={`Remove ${item.title}`} onClick={() => setSubtasks((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></li>)}</ul>}
+              </label>
               <div className="tracker-field-row">
                 <label className="tracker-field">
                   <span>Subject</span>
@@ -237,14 +262,6 @@ export function TrackerModal({
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="e.g., CS 101"
                   />
-                </label>
-                <label className="tracker-field">
-                  <span>Priority</span>
-                  <select className="tracker-input" value={priority} onChange={(e) => setPriority(e.target.value)}>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
                 </label>
               </div>
               <label className="tracker-field">

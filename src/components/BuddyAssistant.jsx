@@ -86,6 +86,12 @@ export function BuddyAssistant() {
     finally { setLoading(false); }
   };
 
+  const handlePromptKeyDown = (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  };
+
   return (
     <section className="buddy-workspace" aria-labelledby="buddy-page-title">
       <header className="buddy-page-heading">
@@ -99,7 +105,7 @@ export function BuddyAssistant() {
       </div>
       <form className="buddy-page-form" onSubmit={askGemini}>
         <label htmlFor="buddy-question">What would you like to learn or know?</label>
-        <div><textarea ref={inputRef} id="buddy-question" className="buddy-page-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={promptCount >= 5 ? "AI limit reached; preset questions are still available." : "For example: Explain quadratic equations step by step…"} rows="3" maxLength="500" disabled={promptCount >= 5} /><button className="buddy-page-submit" type="submit" disabled={loading || !query.trim() || promptCount >= 5}>{loading ? "Thinking…" : "Ask Buddy"}</button></div>
+        <div><textarea ref={inputRef} id="buddy-question" className="buddy-page-input" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={handlePromptKeyDown} placeholder={promptCount >= 5 ? "AI limit reached; preset questions are still available." : "For example: Explain quadratic equations step by step…"} rows="3" maxLength="500" disabled={promptCount >= 5} /><button className="buddy-page-submit" type="submit" disabled={loading || !query.trim() || promptCount >= 5}>{loading ? "Thinking…" : "Ask Buddy"}</button></div>
         <span>{promptCount >= 5 ? "AI limit reached for this 8-hour period." : `${5 - promptCount} AI questions remaining · 500 characters maximum`}</span>
       </form>
       <div className="buddy-page-suggestions"><span className="eyebrow">Quick questions</span><div>{Object.keys(questions).map((question) => <button key={question} type="button" onClick={() => chooseQuestion(question)}>{question}</button>)}<button type="button" onClick={showContext}>What can you see?</button><button type="button" onClick={copyEmail}>{copied ? "Email copied" : "Copy email"}</button><button type="button" onClick={clearConversation}>Clear answer</button></div></div>

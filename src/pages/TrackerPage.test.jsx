@@ -10,6 +10,12 @@ const mocks = vi.hoisted(() => ({
   getHabits: vi.fn(),
   getRewards: vi.fn(),
   getStats: vi.fn(),
+  applyOverduePenalties: vi.fn(),
+  getWeeklyEvents: vi.fn(),
+  getDismissedReviews: vi.fn(),
+  dismissWeeklyReview: vi.fn(),
+  updateAssignmentSubtasks: vi.fn(),
+  updateSubtaskTime: vi.fn(),
 }));
 
 vi.mock("../hooks/useAuth", () => ({ useAuth: () => mocks.session }));
@@ -32,6 +38,12 @@ vi.mock("../services/tracker", () => ({
   getHabits: mocks.getHabits,
   getRewards: mocks.getRewards,
   getStats: mocks.getStats,
+  applyOverduePenalties: mocks.applyOverduePenalties,
+  getWeeklyEvents: mocks.getWeeklyEvents,
+  getDismissedReviews: mocks.getDismissedReviews,
+  dismissWeeklyReview: mocks.dismissWeeklyReview,
+  updateAssignmentSubtasks: mocks.updateAssignmentSubtasks,
+  updateSubtaskTime: mocks.updateSubtaskTime,
   logHabit: vi.fn(),
   redeemReward: vi.fn(),
 }));
@@ -62,6 +74,9 @@ async function renderTracker({ ownerId = "", session = null, activity = [], supa
   mocks.getHabits.mockResolvedValue([]);
   mocks.getRewards.mockResolvedValue([]);
   mocks.getStats.mockResolvedValue(stats);
+  mocks.applyOverduePenalties.mockResolvedValue([]);
+  mocks.getWeeklyEvents.mockResolvedValue([]);
+  mocks.getDismissedReviews.mockResolvedValue([]);
   const { default: TrackerPage } = await import("./TrackerPage");
   return render(<TrackerPage />);
 }
