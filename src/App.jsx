@@ -4,6 +4,7 @@ import { Certifications } from "./components/Certifications";
 import { GitHubActivity } from "./components/GitHubActivity";
 import { PageFrame } from "./components/PageFrame";
 import { PixelBuddy } from "./components/PixelBuddy";
+import { ProjectCard } from "./components/ProjectCard";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { Reveal } from "./components/Reveal";
 import { Stack } from "./components/Stack";
@@ -32,7 +33,7 @@ function CurrentRoute() {
   const content = getRouteContent(route);
   return (
     <PageFrame pathname={route.path} project={route.project} showPresence={route.id === ROUTES.home.id}>
-      <Suspense fallback={<main className="route-loading" aria-live="polite">Loading page…</main>}>
+      <Suspense fallback={<main id="top" tabIndex={-1} className="route-loading" aria-live="polite">Loading page…</main>}>
         {content}
       </Suspense>
     </PageFrame>
@@ -55,13 +56,16 @@ function getRouteContent(route) {
 function HomePage() {
   return (
     <main className="hub-home" id="top">
-      <Reveal as="section" className="hero hub-hero">
+      <section className="hero hub-hero" aria-labelledby="home-title">
         <HeroBackground />
-        <div className="eyebrow">IT student · Cebu, Philippines</div>
-        <h1 aria-label="Learning to make useful things with code.">Learning to make<br /><em>useful things</em> with code.</h1>
+        <div className="hero-intro">
+          <img src="/haniel-molejon-480.webp" alt="" width="48" height="48" decoding="async" />
+          <div><span className="hero-name">Haniel Molejon</span><span className="hero-location">IT student in Cebu, Philippines</span></div>
+        </div>
+        <h1 id="home-title" aria-label="Learning to make useful things with code.">Learning to make<br /><em>useful things</em> with code.</h1>
         <div className="hero-bottom">
           <div>
-            <p>I’m Haniel Molejon, a first-year BS Information Technology student building practical Python and automation projects while looking for an internship where I can learn, contribute, and grow.</p>
+            <p>I’m a first-year BS Information Technology student building practical Python and automation projects. I’m looking for an internship where I can learn and contribute.</p>
             <span className="availability-pill">Open to internship opportunities</span>
           </div>
           <div className="hero-actions">
@@ -69,13 +73,22 @@ function HomePage() {
             <a className="hero-secondary-action" href={ROUTES.contact.path}>Contact me</a>
           </div>
         </div>
-      </Reveal>
+      </section>
 
-      <PixelBuddy />
+      <section className="home-proof-section home-projects" id="work" aria-labelledby="home-projects-title">
+        <div className="home-projects-heading">
+          <h2 id="home-projects-title">A few things I’ve built.</h2>
+          <p>Practical projects, with the thinking and tradeoffs behind them.</p>
+        </div>
+        <div className="home-project-grid">
+          {projects.map((project) => <ProjectCard project={project} headingLevel="h3" key={project.slug} />)}
+        </div>
+      </section>
 
-      <Reveal><GitHubActivity /></Reveal>
       <Reveal><Stack /></Reveal>
+      <Reveal><GitHubActivity /></Reveal>
       <Reveal><Certifications /></Reveal>
+      <PixelBuddy />
     </main>
   );
 }

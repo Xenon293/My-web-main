@@ -21,11 +21,17 @@ export function PageFrame({ children, pathname, project, showPresence = false })
   return (
     <>
       <Seo pathname={pathname} project={project} />
+      <a className="skip-link" href="#top" onClick={() => {
+        const main = document.querySelector("main");
+        main?.setAttribute("tabindex", "-1");
+        main?.focus({ preventScroll: true });
+      }}>Skip to content</a>
       <Nav />
       {showPresence && <div className="presence-wrap"><Presence /></div>}
       {children}
-      <Footer onPrivacyOpen={openPrivacy} />
-      <CookieConsent onPrivacyOpen={openPrivacy} />
+      <Footer onPrivacyOpen={openPrivacy}>
+        <CookieConsent onPrivacyOpen={openPrivacy} />
+      </Footer>
       <PrivacyModal open={privacyOpen} onClose={closePrivacy} returnFocusRef={privacyTriggerRef} />
     </>
   );

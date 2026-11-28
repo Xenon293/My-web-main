@@ -20,12 +20,13 @@ test("saves a first-visit decision and reopens without resetting it", () => {
 
   expect(localStorage.getItem(siteConfig.consentStorageKey)).toBe("rejected");
   const settings = screen.getByRole("button", { name: "Privacy settings" });
-  expect(settings).toHaveFocus();
+  expect(settings).not.toHaveFocus();
 
   fireEvent.click(settings);
   expect(screen.getByText(/current choice:/i)).toHaveTextContent("Optional rejected");
   fireEvent.click(screen.getByRole("button", { name: "Accept optional" }));
   expect(localStorage.getItem(siteConfig.consentStorageKey)).toBe("accepted");
+  expect(screen.getByRole("button", { name: "Privacy settings" })).toHaveFocus();
 });
 
 test("restores a saved decision without showing the card", () => {

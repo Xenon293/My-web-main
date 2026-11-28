@@ -77,7 +77,7 @@ function PixelPlanet({ colors }) {
   );
 }
 
-function GalaxyScene() {
+function GalaxyScene({ active }) {
   const farStars = useRef(null);
   const nearStars = useRef(null);
   const celestial = useRef(null);
@@ -87,6 +87,7 @@ function GalaxyScene() {
   const colors = useThemeColors();
 
   useEffect(() => {
+    if (!active) return undefined;
     const updatePointer = (event) => {
       pointer.current.x = THREE.MathUtils.clamp(event.clientX / window.innerWidth * 2 - 1, -1, 1);
       pointer.current.y = THREE.MathUtils.clamp(event.clientY / window.innerHeight * 2 - 1, -1, 1);
@@ -100,7 +101,7 @@ function GalaxyScene() {
       document.documentElement.removeEventListener("pointerleave", resetPointer);
       window.removeEventListener("blur", resetPointer);
     };
-  }, []);
+  }, [active]);
 
   useFrame((state, delta) => {
     if (!farStars.current || !nearStars.current || !celestial.current) return;
@@ -148,15 +149,16 @@ function GalaxyScene() {
   );
 }
 
-export default function HeroScene() {
+export default function HeroScene({ active = true }) {
   return (
     <Canvas
+      frameloop={active ? "always" : "never"}
       camera={{ position: [0, .25, 7], fov: 42 }}
       dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: false, powerPreference: "low-power" }}
       style={{ background: "transparent" }}
     >
-      <GalaxyScene />
+      <GalaxyScene active={active} />
     </Canvas>
   );
 }

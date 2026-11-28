@@ -26,6 +26,7 @@ Create a `.env` file when you want to enable the optional services:
 VITE_SITE_URL=https://your-production-domain.example
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-public-key
+VITE_OWNER_USER_ID=your-auth-user-uuid
 GEMINI_API_KEY=your-server-side-key
 ```
 
@@ -44,6 +45,7 @@ The site is configured for Netlify. Set these values in the Netlify site setting
 - `VITE_SITE_URL` (optional when Netlify’s automatic `URL` value is available)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_OWNER_USER_ID` (your Supabase Authentication user UUID; required for the public tracker view)
 - `GEMINI_API_KEY`
 
 Netlify builds the Vite app and serves the Buddy function from `netlify/functions/ask-buddy.mjs`.

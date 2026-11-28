@@ -9,7 +9,7 @@ const exploreLinks = [
   ["Contact", ROUTES.contact.path],
 ];
 
-export function Footer({ onPrivacyOpen }) {
+export function Footer({ onPrivacyOpen, children }) {
   return (
     <footer className="site-footer">
       <div className="site-footer__grid">
@@ -36,6 +36,7 @@ export function Footer({ onPrivacyOpen }) {
             <li><a href={siteConfig.github} target="_blank" rel="noopener noreferrer">GitHub <LineIcon name="arrowUpRight" size={14} /></a></li>
             <li><a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer">Instagram <LineIcon name="arrowUpRight" size={14} /></a></li>
             <li><a href={ROUTES.privacy.path} onClick={onPrivacyOpen}>Privacy</a></li>
+            {children && <li>{children}</li>}
           </ul>
         </div>
       </div>

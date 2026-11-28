@@ -1,30 +1,29 @@
 import { projectPath } from "../config/routes";
 import { LineIcon } from "./LineIcon";
 
-export function ProjectCard({ project }) {
+export function ProjectCard({ project, headingLevel: Heading = "h2" }) {
   return (
-    <article className="project-card project-row">
-      <div className="project-row__number">{project.number}</div>
-      <div className="project-row__preview">
-        {project.preview ? (
+    <article className={`project-card project-row${project.preview ? " has-preview" : ""}`}>
+      {project.preview && <div className="project-row__preview">
           <img className="project-preview-image" src={project.preview} alt={`${project.title} project preview`} loading="lazy" decoding="async" />
-        ) : (
-          <div className="project-preview" aria-label={`${project.title} preview placeholder`}>
-            <span>Project preview</span><strong>{project.title}</strong><small>Original screenshot coming soon</small>
-          </div>
-        )}
-      </div>
+      </div>}
       <div className="project-row__copy">
-        <span className="eyebrow">Selected work</span>
-        <h2>{project.title}</h2>
+        <Heading>{project.title}</Heading>
         <p>{project.description}</p>
         <ul className="tag-list project-card-tags" aria-label="Technologies used">
           {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
         </ul>
       </div>
-      <a className="project-row__link" href={projectPath(project.slug)}>
-        <span>View case study</span><LineIcon name="arrowRight" size={18} />
-      </a>
+      <div className="project-row__actions">
+        <a className="project-row__link" href={projectPath(project.slug)} aria-label={`View case study: ${project.title}`}>
+          <span>View case study</span><LineIcon name="arrowRight" size={18} />
+        </a>
+        {project.repository && (
+          <a className="project-row__link" href={project.repository} target="_blank" rel="noopener noreferrer" aria-label={`View ${project.title} source code on GitHub (opens in a new tab)`}>
+            <span>GitHub</span><LineIcon name="arrowUpRight" size={18} />
+          </a>
+        )}
+      </div>
     </article>
   );
 }

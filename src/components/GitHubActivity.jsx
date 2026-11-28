@@ -51,10 +51,10 @@ export function GitHubActivity() {
   return (
     <section className="home-proof-section github-activity" aria-labelledby="github-activity-title">
       <div className="home-section-heading">
-        <span className="eyebrow">01 / GitHub</span>
+        <span className="eyebrow">GitHub</span>
         <div>
           <h2 id="github-activity-title">Learning in public.</h2>
-          <p>Small experiments, coursework, and practical projects—one commit at a time.</p>
+          <p>Small experiments, coursework, and practical projects, one commit at a time.</p>
         </div>
       </div>
 

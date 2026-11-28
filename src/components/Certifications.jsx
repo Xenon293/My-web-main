@@ -4,7 +4,7 @@ export function Certifications() {
   return (
     <section className="home-proof-section certifications" aria-labelledby="certifications-title">
       <div className="home-section-heading">
-        <span className="eyebrow">03 / Certifications</span>
+        <span className="eyebrow">Certifications</span>
         <div>
           <h2 id="certifications-title">Foundations, verified.</h2>
           <p>Cisco credentials supporting my growing cybersecurity foundation.</p>

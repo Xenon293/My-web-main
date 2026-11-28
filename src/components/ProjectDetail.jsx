@@ -10,14 +10,14 @@ export function ProjectDetail({ project }) {
         <ul className="tag-list" aria-label="Technologies used">
           {project.technologies.map((technology) => <li key={technology}>{technology}</li>)}
         </ul>
+        {(project.repository || project.demo) && <div className="case-study-links">
+          {project.repository && <a className="hero-primary-action" href={project.repository} target="_blank" rel="noopener noreferrer" aria-label={`View ${project.title} repository on GitHub (opens in a new tab)`}>View repository <LineIcon name="arrowUpRight" size={15} /></a>}
+          {project.demo && <a className="hero-secondary-action" href={project.demo} target="_blank" rel="noopener noreferrer">View demo <LineIcon name="arrowUpRight" size={15} /></a>}
+        </div>}
       </header>
 
-      {project.preview ? (
+      {project.preview && (
         <img className="case-study-preview-image" src={project.preview} alt={`${project.title} project preview`} />
-      ) : (
-        <div className="case-study-preview-placeholder" aria-label={`${project.title} preview placeholder`}>
-          <span>Original project screenshot coming soon</span><strong>{project.title}</strong>
-        </div>
       )}
 
       <div className="case-study-body">
@@ -28,10 +28,6 @@ export function ProjectDetail({ project }) {
         <section><span className="detail-label">Outcome</span><h2>What the project produced.</h2><p>{project.outcome}</p></section>
       </div>
 
-      {(project.repository || project.demo) && <div className="case-study-links">
-        {project.repository && <a className="hero-primary-action" href={project.repository} target="_blank" rel="noopener noreferrer">View repository <LineIcon name="arrowUpRight" size={15} /></a>}
-        {project.demo && <a className="hero-secondary-action" href={project.demo} target="_blank" rel="noopener noreferrer">View demo <LineIcon name="arrowUpRight" size={15} /></a>}
-      </div>}
     </article>
   );
 }

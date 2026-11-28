@@ -3,59 +3,98 @@ import { ROUTES } from "../config/routes";
 
 export function PixelBuddy() {
   const sectionRef = useRef(null);
-  const [progress, setProgress] = useState(0);
+  const stageRef = useRef(null);
+  const [active, setActive] = useState(false);
   const [mood, setMood] = useState("hello");
   const [prop, setProp] = useState("");
   const [pixels, setPixels] = useState(0);
   const lastSection = useRef("");
 
   useEffect(() => {
-    let frame;
+    const section = sectionRef.current;
+    if (!section) return undefined;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let inView = typeof IntersectionObserver === "undefined";
+    let animating = false;
+    let frame = null;
     let idleTimer;
     const update = () => {
-      cancelAnimationFrame(frame);
+      if (!animating || frame !== null) return;
       frame = requestAnimationFrame(() => {
-        const box = sectionRef.current?.getBoundingClientRect();
-        if (!box) return;
-        setProgress(Math.max(0, Math.min(1, (window.innerHeight - box.top) / (window.innerHeight + box.height))));
+        frame = null;
+        const box = section.getBoundingClientRect();
+        const progress = Math.max(0, Math.min(1, (window.innerHeight - box.top) / (window.innerHeight + box.height)));
+        // Position is transient animation data; updating it should not render React.
+        stageRef.current?.style.setProperty("--scroll-progress", String(progress));
         clearTimeout(idleTimer);
         setMood("happy");
         idleTimer = setTimeout(() => setMood("sleepy"), 1800);
-        const visible = [...document.querySelectorAll("section[id]")].find((item) => {
-          const rect = item.getBoundingClientRect();
-          return rect.top < window.innerHeight * 0.65 && rect.bottom > window.innerHeight * 0.35;
-        });
-        if (visible?.id && visible.id !== lastSection.current) {
-          lastSection.current = visible.id;
-          setPixels((value) => Math.min(value + 1, 8));
-          setMood("point");
-          setProp(visible.id === "work" ? "terminal" : visible.id === "resources" ? "book" : "");
-        }
       });
     };
+    const syncActivity = () => {
+      animating = inView && !motion.matches && !document.hidden;
+      setActive(animating);
+      if (animating) update();
+      else {
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        clearTimeout(idleTimer);
+      }
+    };
+    const visibilityObserver = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      syncActivity();
+    });
+    visibilityObserver?.observe(section);
+    syncActivity();
+    motion.addEventListener("change", syncActivity);
+    document.addEventListener("visibilitychange", syncActivity);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      visibilityObserver?.disconnect();
+      if (frame !== null) cancelAnimationFrame(frame);
+      clearTimeout(idleTimer);
+      motion.removeEventListener("change", syncActivity);
+      document.removeEventListener("visibilitychange", syncActivity);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Track discoveries with browser visibility notifications, without scanning
+    // every section's layout on each scroll event.
+    const sectionObserver = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting || entry.target.id === lastSection.current) continue;
+        lastSection.current = entry.target.id;
+        setPixels((value) => Math.min(value + 1, 8));
+        setMood("point");
+        setProp(entry.target.id === "work" ? "terminal" : entry.target.id === "resources" ? "book" : "");
+      }
+    }, { threshold: .15 });
+    document.querySelectorAll("section[id]").forEach((section) => sectionObserver?.observe(section));
     const celebrate = () => { setMood("celebrate"); setProp("sparkles"); };
     const shortcut = (event) => {
-      if ((event.key === "/" || (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) && !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
+      const editing = document.activeElement?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+      if ((event.key === "/" || (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) && !editing) {
         event.preventDefault();
         window.location.assign(ROUTES.buddy.path);
       }
     };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("typing-complete", celebrate);
     window.addEventListener("keydown", shortcut);
     return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(idleTimer);
-      window.removeEventListener("scroll", update);
+      sectionObserver?.disconnect();
       window.removeEventListener("typing-complete", celebrate);
       window.removeEventListener("keydown", shortcut);
     };
   }, []);
 
   return (
-    <section ref={sectionRef} className="pixel-interlude" aria-label="A small pixel study buddy">
-      <div className={`pixel-stage mood-${mood}`} style={{ "--scroll-progress": progress }}>
+    <section ref={sectionRef} className="pixel-interlude" data-paused={!active} aria-label="A small pixel study buddy">
+      <div ref={stageRef} className={`pixel-stage mood-${mood}`}>
         <div className="pixel-grid" aria-hidden="true" />
         <div className="pixel-shadow" aria-hidden="true" />
         <a className="pixel-buddy-button" href={ROUTES.buddy.path} aria-label="Open Ask Buddy on its own page">

@@ -23,14 +23,23 @@ export function Nav() {
   const isSubpage = currentPath !== ROUTES.home.path;
   const [open, setOpen] = useState(false);
   const [mobileNav, setMobileNav] = useState(() => window.matchMedia?.(MOBILE_NAV_QUERY).matches ?? false);
+  const wordmarkRef = useRef(null);
   const menuButtonRef = useRef(null);
   const navRef = useRef(null);
   const scrollLockRef = useRef(0);
   const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || saved === "light") return saved === "dark";
+    try {
+      const saved = localStorage.getItem("theme");
+      if (saved === "dark" || saved === "light") return saved === "dark";
+    } catch {
+      // Theme switching remains available when browser storage is blocked.
+    }
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, [dark]);
 
   useEffect(() => {
     const media = window.matchMedia?.(MOBILE_NAV_QUERY);
@@ -45,15 +54,13 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    document.body.classList.toggle("menu-open", open);
-    if (!open) {
-      document.body.style.top = "";
-      return () => document.body.classList.remove("menu-open");
-    }
+    if (!open) return undefined;
 
+    // Read before position: fixed removes the page's scroll offset.
     scrollLockRef.current = window.scrollY;
     document.body.style.top = `-${scrollLockRef.current}px`;
-    navRef.current?.querySelector("a, button")?.focus();
+    document.body.classList.add("menu-open");
+    navRef.current?.querySelector("a, button")?.focus({ preventScroll: true });
 
     return () => {
       document.body.classList.remove("menu-open");
@@ -65,14 +72,21 @@ export function Nav() {
   useEffect(() => {
     if (!open) return undefined;
     const trapFocus = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        menuButtonRef.current?.focus({ preventScroll: true });
+        return;
+      }
       if (event.key !== "Tab") return;
-      const controls = [...navRef.current.querySelectorAll('a[href], button:not([disabled])')];
+      const controls = [wordmarkRef.current, menuButtonRef.current, ...navRef.current.querySelectorAll('a[href], button:not([disabled])')];
       const first = controls[0];
       const last = controls.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
+      const focusOutsideMenu = !controls.includes(document.activeElement);
+      if (event.shiftKey && (document.activeElement === first || focusOutsideMenu)) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && (document.activeElement === last || focusOutsideMenu)) {
         event.preventDefault();
         first.focus();
       }
@@ -81,16 +95,11 @@ export function Nav() {
     return () => window.removeEventListener("keydown", trapFocus);
   }, [open]);
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === "Escape" && open) {
-        setOpen(false);
-        menuButtonRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  const closeMenu = () => {
+    if (!open) return;
+    setOpen(false);
+    menuButtonRef.current?.focus({ preventScroll: true });
+  };
 
   const isActive = (href) => {
     if (href === ROUTES.projects.path) {
@@ -107,10 +116,15 @@ export function Nav() {
     const applyTheme = () => {
       setDark(next);
       document.documentElement.dataset.theme = next ? "dark" : "light";
-      localStorage.setItem("theme", next ? "dark" : "light");
+      try {
+        localStorage.setItem("theme", next ? "dark" : "light");
+      } catch {
+        // The current page can still use the selected theme without storage.
+      }
     };
 
-    if (document.startViewTransition) {
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (document.startViewTransition && !reducedMotion) {
       const transition = document.startViewTransition(applyTheme);
       transition.ready.then(() => {
         const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
@@ -129,7 +143,7 @@ export function Nav() {
       aria-current={isActive(link.href) ? "page" : undefined}
       href={link.href}
       key={link.href}
-      onClick={() => setOpen(false)}
+      onClick={closeMenu}
     >
       <LineIcon name={link.icon} size={17} />
       <span>{link.label}</span>
@@ -139,17 +153,18 @@ export function Nav() {
   return (
     <>
       <header className="site-header">
-        <a className="wordmark" href={ROUTES.home.path} aria-label={isSubpage ? "Haniel Molejon, portfolio home" : "Haniel Molejon, back to top"}>
+        <a ref={wordmarkRef} className="wordmark" href={ROUTES.home.path} aria-label={isSubpage ? "Haniel Molejon, portfolio home" : "Haniel Molejon, back to top"}>
           HM<span>.</span>
         </a>
         <div className="nav-actions">
           <button
             ref={menuButtonRef}
+            type="button"
             className="menu-button"
             aria-expanded={open}
             aria-controls="site-nav"
             aria-label={open ? "Close navigation menu" : "Open navigation menu"}
-            onClick={() => setOpen((value) => !value)}
+            onClick={open ? closeMenu : () => setOpen(true)}
           >
             {open ? "Close" : "Menu"}
           </button>
@@ -173,13 +188,13 @@ export function Nav() {
           </div>
           <div className="nav-group nav-secondary">
             <span className="nav-group-label">Elsewhere</span>
-            <a href="https://github.com/Xenon293" target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+            <a href="https://github.com/Xenon293" target="_blank" rel="noreferrer" onClick={closeMenu}>
               <LineIcon name="github" size={17} /><span>GitHub</span>
             </a>
-            <a href={siteConfig.instagram} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+            <a href={siteConfig.instagram} target="_blank" rel="noreferrer" onClick={closeMenu}>
               <LineIcon name="instagram" size={17} /><span>Instagram</span>
             </a>
-            <a href="mailto:hanielvantecil@gmail.com" onClick={() => setOpen(false)}>
+            <a href="mailto:hanielvantecil@gmail.com" onClick={closeMenu}>
               <LineIcon name="contact" size={17} /><span>Email</span>
             </a>
           </div>
@@ -190,7 +205,7 @@ export function Nav() {
           </button>
         </nav>
       </header>
-      <div className={`nav-backdrop ${open ? "is-open" : ""}`} onClick={() => setOpen(false)} aria-hidden="true" />
+      <div className={`nav-backdrop ${open ? "is-open" : ""}`} onClick={closeMenu} aria-hidden="true" />
     </>
   );
 }

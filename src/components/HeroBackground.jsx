@@ -5,7 +5,9 @@ const HeroScene = lazy(() => import("./HeroScene"));
 function supportsWebGL() {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2"));
+    const context = canvas.getContext("webgl2");
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    return Boolean(context);
   } catch {
     return false;
   }
@@ -29,6 +31,7 @@ export function HeroBackground() {
   const [canRender, setCanRender] = useState(false);
   const [visible, setVisible] = useState(true);
   const [idle, setIdle] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     const schedule = window.requestIdleCallback || ((callback) => window.setTimeout(callback, 900));
@@ -40,8 +43,9 @@ export function HeroBackground() {
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let webglSupported;
     const updateCapability = () => {
-      setCanRender(desktop.matches && !reducedMotion.matches && supportsWebGL());
+      setCanRender(desktop.matches && !reducedMotion.matches && (webglSupported ??= supportsWebGL()));
     };
     updateCapability();
     desktop.addEventListener("change", updateCapability);
@@ -56,28 +60,33 @@ export function HeroBackground() {
     const element = rootRef.current;
     if (!element) return undefined;
     const updateVisibility = () => setVisible(intersectsRef.current && !document.hidden);
-    const observer = new IntersectionObserver(
+    updateVisibility();
+    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(
       ([entry]) => {
         intersectsRef.current = entry.isIntersecting;
         updateVisibility();
       },
       { rootMargin: "100px" },
     );
-    observer.observe(element);
+    observer?.observe(element);
     document.addEventListener("visibilitychange", updateVisibility);
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       document.removeEventListener("visibilitychange", updateVisibility);
     };
   }, []);
 
+  useEffect(() => {
+    if (canRender && visible && idle) setStarted(true);
+  }, [canRender, visible, idle]);
+
   return (
     <div ref={rootRef} className="hero-background pointer-events-none absolute inset-0" aria-hidden="true">
       <div className="hero-background-fallback" />
-      {canRender && visible && idle ? (
+      {canRender && started ? (
         <SceneBoundary>
           <Suspense fallback={null}>
-            <HeroScene />
+            <HeroScene active={visible} />
           </Suspense>
         </SceneBoundary>
       ) : null}

@@ -67,24 +67,38 @@ export default function TrackerPage() {
   }, [toast]);
 
   const refreshPublic = useCallback(async () => {
+    if (!OWNER_USER_ID && session === undefined) return;
     if (!publicUserId) {
+      setStats(null);
+      setActivity([]);
+      setPublicError("Public tracker data is not configured. Add VITE_OWNER_USER_ID to the site environment and rebuild.");
       setLoadingPublic(false);
       return;
     }
+    if (!supabase) {
+      setStats(null);
+      setActivity([]);
+      setPublicError("Tracker data is unavailable. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+      setLoadingPublic(false);
+      return;
+    }
+    setLoadingPublic(true);
     setPublicError("");
     try {
       const [nextStats, nextActivity] = await Promise.all([
-        getStats(publicUserId),
-        getActivityLog(publicUserId),
+        getStats(publicUserId, { throwOnError: true }),
+        getActivityLog(publicUserId, { throwOnError: true }),
       ]);
       setStats(nextStats);
       setActivity(nextActivity);
     } catch {
-      setPublicError("Could not load tracker stats right now.");
+      setStats(null);
+      setActivity([]);
+      setPublicError("Could not load public tracker data. Check the Supabase settings and try again.");
     } finally {
       setLoadingPublic(false);
     }
-  }, [publicUserId]);
+  }, [publicUserId, session]);
 
   const refreshPrivate = useCallback(async () => {
     if (!isOwner || !userId) return;
@@ -299,7 +313,7 @@ export default function TrackerPage() {
       )}
 
       <RpgStats stats={stats} loading={loadingPublic} error={publicError} isOwner={isOwner} />
-      <TrackerHeatmap activity={activity} loading={loadingPublic} />
+      <TrackerHeatmap activity={activity} loading={loadingPublic} error={publicError} />
 
       {isOwner ? (
         <section className="tracker-workspace" aria-label="Task workspace">

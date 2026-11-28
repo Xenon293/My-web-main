@@ -5,6 +5,7 @@ export function Reveal({
   className = "",
   delay = 0,
   as: Tag = "div",
+  style,
   ...props
 }) {
   const ref = useRef(null);
@@ -13,6 +14,10 @@ export function Reveal({
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
+    if (typeof IntersectionObserver === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(true);
+      return undefined;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -36,7 +41,7 @@ export function Reveal({
       {...props}
       ref={ref}
       className={`reveal ${visible ? "is-visible" : ""} ${className}`}
-      style={{ "--reveal-delay": `${delay}ms` }}
+      style={{ ...style, "--reveal-delay": `${delay}ms` }}
     >
       {children}
     </Tag>

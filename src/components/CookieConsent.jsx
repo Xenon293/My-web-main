@@ -9,7 +9,7 @@ export function CookieConsent({ onPrivacyOpen }) {
   const restoreSettingsFocusRef = useRef(false);
   const choose = (value) => {
     decide(value);
-    restoreSettingsFocusRef.current = true;
+    restoreSettingsFocusRef.current = Boolean(consent);
     setOpen(false);
   };
 
@@ -24,7 +24,7 @@ export function CookieConsent({ onPrivacyOpen }) {
 
   useEffect(() => {
     if (!open && restoreSettingsFocusRef.current) {
-      settingsButtonRef.current?.focus();
+      settingsButtonRef.current?.focus({ preventScroll: true });
       restoreSettingsFocusRef.current = false;
     }
   }, [open]);

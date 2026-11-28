@@ -30,14 +30,18 @@ function applyXpGain(level, xp, xpToNext, gained) {
  * Fetch the owner's public stats.
  * ownerUserId comes from VITE_OWNER_USER_ID — works for anon visitors too.
  */
-export async function getStats(ownerUserId) {
+export async function getStats(ownerUserId, { throwOnError = false } = {}) {
   if (!supabase || !ownerUserId) return null;
   const { data, error } = await supabase
     .from("user_stats")
     .select("*")
     .eq("id", ownerUserId)
     .maybeSingle();
-  if (error) { console.error("getStats:", error.message); return null; }
+  if (error) {
+    console.error("getStats:", error.message);
+    if (throwOnError) throw error;
+    return null;
+  }
   return data;
 }
 
@@ -106,7 +110,7 @@ async function _incrementActivity(userId) {
  * Fetch the last 52 weeks of activity for the public heatmap.
  * Returns an array of { date: "YYYY-MM-DD", count: number }.
  */
-export async function getActivityLog(ownerUserId) {
+export async function getActivityLog(ownerUserId, { throwOnError = false } = {}) {
   if (!supabase || !ownerUserId) return [];
   const since = new Date();
   since.setDate(since.getDate() - 364);
@@ -119,7 +123,11 @@ export async function getActivityLog(ownerUserId) {
     .gte("date", sinceStr)
     .order("date", { ascending: true });
 
-  if (error) { console.error("getActivityLog:", error.message); return []; }
+  if (error) {
+    console.error("getActivityLog:", error.message);
+    if (throwOnError) throw error;
+    return [];
+  }
   return data ?? [];
 }
 

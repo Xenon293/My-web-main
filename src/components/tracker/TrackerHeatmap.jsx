@@ -23,7 +23,7 @@ function countToLevel(count) {
   return 4;
 }
 
-export function TrackerHeatmap({ activity, loading }) {
+export function TrackerHeatmap({ activity, loading, error = "" }) {
   const { cells, totalActions, streak } = useMemo(() => {
     const map = new Map((activity ?? []).map((row) => [row.date, row.count]));
     const today = todayPHT();
@@ -64,12 +64,14 @@ export function TrackerHeatmap({ activity, loading }) {
           <h2 id="tracker-heatmap-title">Consistency</h2>
         </div>
         <div className="tracker-heatmap__meta">
-          <span><strong>{totalActions}</strong> actions</span>
-          <span><strong>{streak}d</strong> streak</span>
+          <span><strong>{loading || error ? "—" : totalActions}</strong> actions</span>
+          <span><strong>{loading || error ? "—" : `${streak}d`}</strong> streak</span>
         </div>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="tracker-heatmap__state" role="status">Heatmap unavailable until tracker data loads.</div>
+      ) : loading ? (
         <div className="tracker-heatmap__skeleton" aria-busy="true" aria-label="Loading heatmap">
           <span className="tracker-skeleton tracker-skeleton--heatmap" />
         </div>

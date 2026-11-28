@@ -4,7 +4,7 @@ export function Stack() {
   return (
     <section className="home-proof-section stack-section" aria-labelledby="stack-title">
       <div className="home-section-heading home-section-heading--compact">
-        <span className="eyebrow">02 / Stack</span>
+        <span className="eyebrow">Stack</span>
         <div>
           <h2 id="stack-title">Tools I build with.</h2>
           <p>A practical toolkit shaped by coursework, personal projects, and this portfolio.</p>
